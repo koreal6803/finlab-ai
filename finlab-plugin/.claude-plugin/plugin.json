@@ -1,0 +1,8 @@
+{
+  "name": "finlab-plugin",
+  "description": "FinLab quantitative trading skills for Taiwan stock market (台股) - includes strategy development, backtesting, data analysis, and factor research",
+  "version": "1.0.0",
+  "author": {
+    "name": "FinLab Community"
+  }
+}
