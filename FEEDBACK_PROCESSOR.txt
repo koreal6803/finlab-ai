@@ -81,10 +81,12 @@ gh pr create --title "Fix: {description}" --body "..."
 
 ## Step 5: Mark Feedback Processed
 
-After PR merged, feedback can be archived or deleted via:
+After PR merged, delete the feedback:
 ```bash
-# Future: DELETE /feedback/{id} endpoint
+curl -X DELETE https://finlab-ai-plugin.koreal6803.workers.dev/feedback/{id}
 ```
+
+Note: Feedback auto-expires after 30 days.
 
 ## Guidelines
 

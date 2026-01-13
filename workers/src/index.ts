@@ -238,6 +238,21 @@ export default {
       });
     }
 
+    // Feedback DELETE endpoint - /feedback/{id}
+    if (url.pathname.startsWith('/feedback/') && request.method === 'DELETE') {
+      const id = url.pathname.slice('/feedback/'.length);
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'id required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+      await env.FEEDBACK.delete(`feedback:${id}`);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     // Feedback endpoint - POST to submit, GET to retrieve
     if (url.pathname === '/feedback') {
       if (request.method === 'POST') {
@@ -257,7 +272,9 @@ export default {
             context: body.context,
             timestamp: new Date().toISOString(),
           };
-          await env.FEEDBACK.put(`feedback:${feedback.id}`, JSON.stringify(feedback));
+          await env.FEEDBACK.put(`feedback:${feedback.id}`, JSON.stringify(feedback), {
+            expirationTtl: 30 * 24 * 60 * 60,  // 30 days
+          });
           return new Response(JSON.stringify({ success: true, id: feedback.id }), {
             headers: { 'Content-Type': 'application/json', ...corsHeaders },
           });
