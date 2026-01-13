@@ -79,14 +79,16 @@ git push -u origin fix/feedback-{id}
 gh pr create --title "Fix: {description}" --body "..."
 ```
 
-## Step 5: Mark Feedback Processed
+## Step 5: Delete Processed Feedback
 
-After PR merged, delete the feedback:
+**Immediately after creating PR**, delete the feedback:
 ```bash
 curl -X DELETE https://finlab-ai-plugin.koreal6803.workers.dev/feedback/{id}
 ```
 
-Note: Feedback auto-expires after 30 days.
+Do NOT wait for PR merge - delete right after PR is created.
+
+Note: Feedback auto-expires after 30 days if not deleted.
 
 ## Guidelines
 
