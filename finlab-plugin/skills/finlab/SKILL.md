@@ -429,6 +429,21 @@ from finlab.dataframe import FinLabDataFrame
 - For best practices: see [best-practices.md](best-practices.md)
 - For backtesting parameters: see [backtesting-reference.md](backtesting-reference.md)
 
+## Feedback
+
+If you encounter issues or have suggestions for improving this documentation, you may submit feedback (with user consent) via:
+
+```python
+import requests
+requests.post("https://finlab-ai-plugin.koreal6803.workers.dev/feedback", json={
+    "type": "bug",  # or "feature", "improvement", "other"
+    "message": "Description of the issue or suggestion",
+    "context": "Optional: relevant code or context"
+})
+```
+
+**Before submitting:** Always ask the user for permission first.
+
 ## Notes
 
 - All strategy code examples use Traditional Chinese (繁體中文) variable names where appropriate

@@ -1,0 +1,104 @@
+# AI Feedback Processor Guide
+
+## Overview
+
+Read user feedback, analyze, propose improvements, and create PRs.
+
+## Step 1: Fetch Feedback
+
+```bash
+curl -s https://finlab-ai-plugin.koreal6803.workers.dev/feedback | jq .
+```
+
+Response format:
+```json
+[
+  {
+    "id": "uuid",
+    "type": "bug|feature|improvement|other",
+    "message": "User feedback text",
+    "context": "Optional context",
+    "timestamp": "ISO date"
+  }
+]
+```
+
+## Step 2: Analyze Feedback
+
+For each feedback item:
+1. Identify target: plugin docs or finlab package
+2. Classify: documentation fix, code example, new feature, bug fix
+3. Assess impact: high (affects core workflow) / medium / low
+
+## Step 3: Determine Target Repository
+
+| Feedback Type | Target |
+|---------------|--------|
+| Documentation unclear | finlab-claude-plugin (this repo) |
+| Code example wrong | finlab-claude-plugin |
+| API behavior issue | ~/Documents/finlab (Python package) |
+| New data request | ~/Documents/finlab |
+| Feature request | Depends on scope |
+
+## Step 4: Create PR
+
+### For finlab-claude-plugin (documentation):
+
+```bash
+cd ~/Documents/skill_test/finlab-claude-plugin
+git checkout -b fix/feedback-{id}
+# Make changes to finlab-plugin/skills/finlab/*.md
+git add .
+git commit -m "Fix: {brief description}
+
+Addresses feedback {id}: {summary}
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+git push -u origin fix/feedback-{id}
+gh pr create --title "Fix: {description}" --body "## Summary
+- Addresses user feedback
+- {changes made}
+
+## Feedback Reference
+ID: {id}
+Type: {type}
+Message: {message}"
+```
+
+### For finlab package:
+
+```bash
+cd ~/Documents/finlab
+git checkout -b fix/feedback-{id}
+# Make changes
+git add .
+git commit -m "Fix: {brief description}
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+git push -u origin fix/feedback-{id}
+gh pr create --title "Fix: {description}" --body "..."
+```
+
+## Step 5: Mark Feedback Processed
+
+After PR merged, feedback can be archived or deleted via:
+```bash
+# Future: DELETE /feedback/{id} endpoint
+```
+
+## Guidelines
+
+1. One PR per feedback item (unless related)
+2. Keep changes minimal and focused
+3. Test changes before PR
+4. Reference feedback ID in commit message
+5. Use clear, descriptive PR titles
+6. For unclear feedback, skip or ask for clarification
+
+## PR Quality Checklist
+
+- [ ] Changes directly address feedback
+- [ ] No unrelated modifications
+- [ ] Code examples tested (if applicable)
+- [ ] Documentation is clear and concise
+- [ ] Commit message references feedback ID
