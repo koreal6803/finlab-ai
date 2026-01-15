@@ -326,23 +326,15 @@ df["股票名稱"] = df.index.map(lambda x: name_map.get(x, x))
 
 ## Plotting Data
 
-Chinese characters are fully supported, so you can plot data directly using matplotlib or seaborn. Always include labels, legends, and titles.
+Use `etl:adj_close` for historical comparison (backward adjusted, 向後還原).
 
-**Example:**
 ```python
 import matplotlib.pyplot as plt
-from finlab import data
+from finlab import data, ffn_core
 
-# Get closing prices for multiple stocks
-close = data.get('price:收盤價')
-
-# Plot specific stocks
-close[['2330', '2317', '2454']].plot(figsize=(12, 6))
-plt.title('台積電、鴻海、聯發科股價走勢')
-plt.xlabel('日期')
-plt.ylabel('收盤價 (元)')
-plt.legend(['台積電', '鴻海', '聯發科'])
-plt.grid(True)
+adj_close = data.get('etl:adj_close')
+adj_close[['2330', '2317', '2454']].loc['2020':].rebase().plot(figsize=(12, 6))
+plt.title('股價走勢比較')
 plt.show()
 ```
 
