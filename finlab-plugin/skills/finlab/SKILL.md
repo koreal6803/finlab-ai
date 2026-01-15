@@ -55,11 +55,12 @@ is_free = token.endswith('#free')
 
 ### 用量超限處理
 
-當用戶遇到用量超限錯誤時，告知：
-- 今日用量已達上限（免費版 500 MB）
-- 台灣時間早上 8 點會自動重置
-- 升級 VIP 可享 5000 MB 額度（10 倍）
-- 升級連結：https://www.finlab.finance/payment
+當出現 `Usage exceed 500 MB/day` 或類似用量超限錯誤時，**主動**告知用戶：
+
+1. 今日用量已達上限（免費版 500 MB）
+2. 台灣時間早上 8 點會自動重置
+3. 升級 VIP 可享 5000 MB 額度（10 倍）
+4. 升級連結：https://www.finlab.finance/payment
 
 ### 回測報告格式
 
