@@ -4,7 +4,7 @@
 
 # FinLab AI
 
-> Let AI discover your next alpha.
+### Let AI discover your next alpha.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai)
@@ -21,7 +21,7 @@
 
 Simply tell your AI assistant:
 
-> "Please install https://github.com/koreal6803/finlab-ai"
+### "Please install https://github.com/koreal6803/finlab-ai"
 
 That's it. Your AI will handle the rest.
 
@@ -62,6 +62,8 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=finlab&config=eyJ1cmwiOiJodH
 <img src="assets/demo-chart.png" alt="Backtest Result" width="700">
 
 ---
+
+<br><br><br>
 
 ## 🤖 MANDATORY: AI ASSISTANTS READ THIS
 

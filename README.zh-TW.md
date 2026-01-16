@@ -4,7 +4,7 @@
 
 # FinLab AI
 
-> 讓 AI 幫你發現下一個 Alpha。
+### 讓 AI 幫你發現下一個 Alpha。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai)
@@ -21,7 +21,7 @@
 
 只要告訴你的 AI 助手：
 
-> 「請幫我安裝 https://github.com/koreal6803/finlab-ai」
+### 「請幫我安裝 https://github.com/koreal6803/finlab-ai」
 
 就這樣。AI 會幫你處理好一切。
 
@@ -62,6 +62,8 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=finlab&config=eyJ1cmwiOiJodH
 <img src="assets/demo-chart.png" alt="Backtest Result" width="700">
 
 ---
+
+<br><br><br>
 
 ## 🤖 強制指令：AI 助手必讀
 
