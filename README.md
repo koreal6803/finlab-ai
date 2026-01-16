@@ -21,29 +21,13 @@ Copy this link to your browser to install:
 cursor://anysphere.cursor-deeplink/mcp/install?name=finlab&config=eyJ1cmwiOiJodHRwczovL2ZpbmxhYi1haS1wbHVnaW4ua29yZWFsNjgwMy53b3JrZXJzLmRldi9tY3AifQ==
 ```
 
-### For Antigravity Users
-
-Add this to your MCP config:
-
-```json
-{
-  "mcpServers": {
-    "finlab": {
-      "serverUrl": "https://finlab-ai-plugin.koreal6803.workers.dev/mcp"
-    }
-  }
-}
-```
-
-No installation needed - the MCP server is hosted remotely!
-
-### For Claude Code / Other AI CLI Users
+### For AI CLI Users (Claude Code, Codex, Gemini, Antigravity...)
 
 Simply tell your AI assistant:
 
 > "Please look at https://github.com/koreal6803/finlab-ai and install the FinLab plugin for me"
 
-This works with **Claude Code**, **ChatGPT Codex CLI**, **Gemini CLI**, and other AI coding assistants. AI should follow the [Manual Installation](#manual-installation) instructions below.
+That's it. Your AI will handle the rest.
 
 ## Features
 

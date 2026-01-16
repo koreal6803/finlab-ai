@@ -21,29 +21,13 @@
 cursor://anysphere.cursor-deeplink/mcp/install?name=finlab&config=eyJ1cmwiOiJodHRwczovL2ZpbmxhYi1haS1wbHVnaW4ua29yZWFsNjgwMy53b3JrZXJzLmRldi9tY3AifQ==
 ```
 
-### Antigravity 用戶
-
-加入以下設定到 MCP config：
-
-```json
-{
-  "mcpServers": {
-    "finlab": {
-      "serverUrl": "https://finlab-ai-plugin.koreal6803.workers.dev/mcp"
-    }
-  }
-}
-```
-
-免安裝 - MCP Server 已部署在雲端！
-
-### Claude Code / 其他 AI CLI 用戶
+### AI CLI 用戶（Claude Code、Codex、Gemini、Antigravity...）
 
 只要告訴你的 AI 助手：
 
 > 「請查看 https://github.com/koreal6803/finlab-ai 並幫我安裝 FinLab plugin」
 
-適用於 **Claude Code**、**ChatGPT Codex CLI**、**Gemini CLI** 及其他 AI 程式助手。AI 應遵照下方[手動安裝](#手動安裝)指示進行。
+就這樣。AI 會幫你處理好一切。
 
 ## 功能特色
 
