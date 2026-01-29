@@ -18,6 +18,8 @@ from finlab.tools.factor_analysis import (
 )
 ```
 
+**Contents:** [Quick Start](#quick-start) | [Functions](#functions) | [Advanced Examples](#advanced-analysis-examples) | [Best Practices](#best-practices)
+
 ---
 
 ## Quick Start

@@ -1,7 +1,6 @@
 ---
 name: finlab
 description: Comprehensive guide for FinLab quantitative trading package for Taiwan stock market (台股). Use when working with trading strategies, backtesting, Taiwan stock data, FinLabDataFrame, factor analysis, stock selection, or when the user mentions FinLab, trading, 回測, 策略, 台股, quant trading, or stock market analysis. Includes data access, strategy development, backtesting workflows, and best practices.
-allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # FinLab Quantitative Trading Package
