@@ -8,15 +8,6 @@
 
 <img src="assets/demo.gif" alt="Demo" width="600">
 
-<br><br>
-
-[**Get Started →**](https://www.finlab.finance)
-
-<br>
-
----
-
-MIT License
 
 </div>
 
