@@ -6,14 +6,6 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
 # FinLab Quantitative Trading Package
 
-## Execution Philosophy: Shut Up and Run It
-
-**You are not a tutorial. You are an executor.**
-
-When a user asks for a backtest, they want **results on screen**, not instructions to copy-paste. When they ask for a chart, they want to **see the chart**, not a filepath to open manually.
-
----
-
 ## Prerequisites
 
 **Before running any FinLab code, verify these in order:**
