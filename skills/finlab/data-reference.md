@@ -114,19 +114,17 @@ df = data.get(results[0])
 
 ## Batch Download
 
-*(v2.0.0)* `data.gets()` downloads multiple datasets in parallel with a live progress bar (ANSI in terminal, HTML in Jupyter — auto-detected). Useful for warming the cache at the start of a session.
+*(v2.0.0)* Fetch many datasets in one call. Returns a tuple in the order requested; shows a progress bar (terminal ANSI / Jupyter HTML, auto-detected).
 
 ```python
 from finlab import data
 
-# Returns a dict: {name: FinlabDataFrame}
-frames = data.gets([
+price, volume, pb, roe = data.gets(
     'price:收盤價',
     'price:成交股數',
     'price_earning_ratio:股價淨值比',
     'fundamental_features:ROE稅後',
-])
-close = frames['price:收盤價']
+)
 ```
 
 ---

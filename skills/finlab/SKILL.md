@@ -277,7 +277,7 @@ Short version pointers for features added in recent releases. Each reference fil
 
 **v2.0.0** (2026-04-04) — major release
 - `finlab.exceptions`: structured error hierarchy (`FinlabError`, `DataError`, `BacktestError`, ...) — see [backtesting-reference.md](backtesting-reference.md)
-- `data.gets()`: parallel batch download with progress bar; `data.override()` / `DataContext` for scoped state — see [data-reference.md](data-reference.md)
+- `data.gets()`: batch download (fetch many datasets in one call) with progress bar; `data.override()` / `DataContext` for scoped state — see [data-reference.md](data-reference.md)
 - `df.cs` / `df.sector` / `df.weight` accessors; `rolling().std/var/skew/kurt/median`; `PolarsFrame` mirrors — see [dataframe-reference.md](dataframe-reference.md)
 - `PositionStreamMixin` for realtime position streaming — see [trading-reference.md](trading-reference.md)
 - `from finlab import FinlabDataFrame` top-level export
@@ -325,12 +325,12 @@ See [best-practices.md](best-practices.md) for more anti-patterns.
 
 ## Performance Defaults
 
-**Default to lazy + batch; only drop to plain pandas when debugging.** Production/strategy code should use `df.lazy()` (polars-backed lazy evaluation) and `data.gets()` (parallel batch download) — both landed in v2.0.0 and cut end-to-end runtime materially. Switch back to `data.get()` + regular pandas only when you need to print/inspect intermediate values interactively.
+**Default to lazy + batch; only drop to plain pandas when debugging.** Production/strategy code should use `df.lazy()` (deferred evaluation — defers the compute graph until a terminal call materializes it, so chained ops avoid redundant passes; *not* polars, *not* multi-CPU) and `data.gets()` (one call fetches many datasets). Both landed in v2.0.0. Switch back to `data.get()` + eager pandas only when you need to print/inspect intermediate values interactively.
 
 ```python
 # ✅ Default: batch fetch + lazy compute
-frames = data.gets(['price:收盤價', 'price:成交股數', 'price_earning_ratio:本益比'])
-close = frames['price:收盤價'].lazy()
+price, volume, pe = data.gets('price:收盤價', 'price:成交股數', 'price_earning_ratio:本益比')
+close = price.lazy()
 
 # ✅ Debug: plain pandas for row-level inspection
 close = data.get('price:收盤價')
