@@ -110,13 +110,13 @@ df = data.get(results[0])
 
 **Note:** `data.get()` emits an 80% usage warning before quota is exhausted *(v1.5.9)*, so long-running notebooks surface quota issues early rather than failing mid-run.
 
-Pass `lazy=True` *(v2.0.0)* to get a lazy FinlabDataFrame — chained ops defer execution until materialized. Recommended for production pipelines; see [Performance Defaults](SKILL.md#performance-defaults).
+Pass `lazy=True` *(v2.0.0)* to return a lazy FinlabDataFrame (deferred compute graph). Omit it for an eager pandas-style frame. See [Performance Defaults](SKILL.md#performance-defaults) for when each is appropriate.
 
 ---
 
 ## Batch Download
 
-*(v2.0.0)* Fetch many datasets in one call. Returns a tuple in the order requested; shows a progress bar (terminal ANSI / Jupyter HTML, auto-detected). Pass `lazy=True` for lazy FinlabDataFrames (recommended for production).
+*(v2.0.0)* Fetch many datasets in one call. Returns a tuple in the order requested; shows a progress bar (terminal ANSI / Jupyter HTML, auto-detected). Pass `lazy=True` for lazy FinlabDataFrames; omit it to get eager ones for interactive inspection.
 
 ```python
 from finlab import data
