@@ -1,6 +1,6 @@
 ---
 name: finlab
-description: Comprehensive guide for FinLab quantitative trading package. Use when working with trading strategies, backtesting, stock data, FinLabDataFrame, factor analysis, stock selection, or when the user mentions FinLab, trading, quant trading, or stock market analysis. Includes data access, strategy development, backtesting workflows, and best practices.
+description: Comprehensive guide for FinLab quantitative trading package across Taiwan and US markets (both single-name equities and ETFs/funds). Use when working with trading strategies, backtesting, stock data, FinLabDataFrame, factor analysis, stock selection, or when the user mentions FinLab, trading, quant trading, US equity, S&P 500 / NASDAQ 100, SPY / QQQ, sector or leveraged ETFs, ETF rotation, 美股, or stock market analysis. Includes data access, strategy development, backtesting workflows, best practices, and US-market specifics (data availability map, filing-date-aligned quarterly fundamentals, US universe construction, USMarket vs. USFundMarket defaults, and ETF backtesting).
 compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral.sh/uv/)
 ---
 
@@ -53,6 +53,23 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 ## Language
 
 **Respond in the user's language.** If user writes in Chinese, respond in Chinese. If in English, respond in English.
+
+## Market Support
+
+FinLab supports Taiwan (default) and US markets. The rest of this file plus [dataframe-reference.md](dataframe-reference.md), [backtesting-reference.md](backtesting-reference.md), [best-practices.md](best-practices.md), [factor-analysis-reference.md](factor-analysis-reference.md), and [machine-learning-reference.md](machine-learning-reference.md) are **market-agnostic** — the APIs behave the same either way.
+
+For US-market work — whether single-name equities (`data.set_market('us')`) or ETFs/funds (`data.set_market('us_fund')`) — **read [us-market.md](us-market.md) first**. Queries that should trigger it include: US equity, S&P 500, NASDAQ 100, 美股, SPY / QQQ, sector SPDRs, leveraged / inverse ETFs, ETF rotation, `us_price:*`, `us_fund_price:*`, `data.us_universe(...)`, or `us_income_statement:*` / `us_cash_flow:*` / `us_balance_sheet:*`. It documents:
+
+- Which US data tables are safe for backtesting versus current-snapshot-only (analyst consensus, ratios, DCF are live-only — do not use them historically)
+- Filing-date-aligned quarterly fundamentals (`key_date == filing_date`) — no `.shift()` workaround needed
+- `Report` API names on US (`creturn` / `daily_creturn` / `get_stats()`; no `get_equity()`)
+- US backtest defaults for both markets: `USMarket` (`fee_ratio=0`, `tax_ratio=0`, `trade_at_price='close'`) and `USFundMarket` for ETF/fund backtests
+- How `data.set_market(...)` is the session-scope switch (there is no `market=` kwarg on `data.get()`)
+- Dollar-volume-top-N universe construction (works back to 2016), S&P 500 / NASDAQ 100 membership via `data.us_universe(index='S&P 500' | 'NASDAQ 100')` with its 2022-11 history-start caveat, quality gates, and sector-exclusion rationale
+- Lookahead-bias checklist specific to US data (rolling-window universe filters, survivorship avoidance)
+- ETF / sector-rotation backtesting via `USFundMarket` and `us_fund_price:*`
+
+Taiwan-market queries can skip that file.
 
 ## API Token Tiers & Usage
 
@@ -269,6 +286,7 @@ See [trading-reference.md](trading-reference.md) for complete broker setup and O
 | [factor-analysis-reference.md](factor-analysis-reference.md)   | IC、Shapley、因子分析                      |
 | [best-practices.md](best-practices.md)                         | 常見錯誤、lookahead bias                   |
 | [machine-learning-reference.md](machine-learning-reference.md) | ML 特徵工程                                |
+| [us-market.md](us-market.md)                                   | US market specifics: data map, quarterly alignment, defaults, universe construction |
 
 ## What's New (since v1.5.8)
 

@@ -860,6 +860,86 @@ report = backtest.sim(position)
 
 ---
 
+## US Equity Examples
+
+The patterns above use Taiwan data paths (`price:收盤價`, etc.). On US market the surface area is the same — `is_largest`, `rank`, `rolling`, `sim()`, `Report` — only the data paths, the active market, and fee/tax defaults change. Four syntax-only templates; read [us-market.md](us-market.md) for data availability, alignment, and universe-construction guidance.
+
+`data.get()` does not take a `market=` argument. Select the market with `data.set_market('us')` (single-name equities) or `data.set_market('us_fund')` (ETFs / mutual funds) before calling `data.get()` / `sim()`.
+
+### Dollar-volume top-N momentum (single-name equities)
+
+```python
+from finlab import data
+from finlab.backtest import sim
+
+data.set_market('us')
+close  = data.get('us_price:adj_close')
+volume = data.get('us_price:volume')
+
+# 6-month momentum, top-100 dollar-volume universe, weekly rebalance
+dollar_vol = (close * volume).rolling(60, min_periods=20).mean()
+top_100    = dollar_vol.is_largest(100)
+momentum   = close / close.shift(126) - 1
+
+position = momentum[top_100].is_largest(20)
+report   = sim(position, resample='W')          # USMarket fee/tax defaults apply
+print(f"CAGR: {report.get_stats()['cagr']:.2%}")
+```
+
+### S&P 500 quality screen (post-2022-11 only)
+
+```python
+from finlab import data
+from finlab.backtest import sim
+
+data.set_market('us')
+with data.us_universe(index='S&P 500'):
+    close = data.get('us_price:adj_close')
+    ocf   = data.get('us_cash_flow:operating_cash_flow')   # quarterly, filing-date aligned
+    eps   = data.get('us_income_statement:eps_diluted')
+
+# Quality: positive OCF and rising trailing EPS
+quality  = (ocf > 0) & (eps > eps.shift(4))
+position = quality & (close > close.average(200))
+report   = sim(position, resample='M')
+```
+
+### ETF rotation (SPY vs. QQQ)
+
+Switch the market to `us_fund` when the tradable universe is ETFs or funds. ETF tickers are **not** in `us_price`; only `us_fund_price` carries them.
+
+```python
+from finlab import data
+from finlab.backtest import sim
+
+data.set_market('us_fund')
+close = data.get('us_fund_price:adj_close')
+
+momentum = close[['SPY', 'QQQ']].pct_change(126)
+position = momentum.is_largest(1)               # hold the single strongest of the two
+report   = sim(position, resample='M')
+```
+
+### Computing a ratio from raw statements (avoids current-snapshot tables)
+
+```python
+from finlab import data
+
+# Do NOT use us_ratios:pe — it only has ~16 days of history.
+# Compute trailing-twelve-months P/E from raw fundamentals instead.
+data.set_market('us')
+price = data.get('us_price:adj_close')
+eps_q = data.get('us_income_statement:eps_diluted')    # quarterly
+
+ttm_eps = eps_q.rolling(4).sum()
+pe      = price / ttm_eps
+cheap   = pe.rank(axis=1, pct=True) < 0.3
+```
+
+See [us-market.md](us-market.md) §1.2 for the full list of current-snapshot tables to avoid in backtests, and §4.2 for the full USFundMarket ETF workflow.
+
+---
+
 ## Related References
 
 - [FinlabDataFrame Reference](dataframe-reference.md) - Enhanced DataFrame methods
@@ -867,3 +947,4 @@ report = backtest.sim(position)
 - Use `data.search('keyword')` to explore the complete data catalog (use Traditional Chinese keywords for TW market, English for US market)
 - [Factor Analysis Reference](factor-analysis-reference.md) - Analyze factor performance
 - [Machine Learning Reference](machine-learning-reference.md) - ML-based strategies
+- [US Market Reference](us-market.md) - Data map, defaults, universe construction for US equity

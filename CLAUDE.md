@@ -19,10 +19,11 @@ finlab-plugin/skills/finlab/
 ├── dataframe-reference.md      # FinLabDataFrame methods (is_largest, sustain, hold_until)
 ├── backtesting-reference.md    # sim() API, Report class, metrics extraction
 ├── trading-reference.md        # OrderExecutor, Position, broker account setup
-├── factor-examples.md          # 60+ complete strategy examples
+├── factor-examples.md          # 60+ complete strategy examples (TW + short US syntax section)
 ├── factor-analysis-reference.md # IC, Shapley values, calc_metric, calc_centrality
 ├── best-practices.md           # Patterns, anti-patterns, error handling
 ├── machine-learning-reference.md # feature.combine, label generation, ML workflow
+├── us-market.md                # US market: data map, quarterly alignment, defaults, universe construction
 └── README.md                   # TODO/improvements tracker
 ```
 
