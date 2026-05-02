@@ -57,6 +57,8 @@ These tables only carry ~16–19 days of recent data. They are live-screening ar
 | `us_price_target_summary:*`        | ~16 days of data                                    |
 | `us_company_profile`               | Static current snapshot (sector, exchange, market_cap) — no history of reclassifications |
 
+For a clean US common-stock universe, use `common = data.get('etl:us_common_stock_filter')` then restrict columns with `df = df[df.columns.intersection(common.columns)]`; this excludes ETFs/funds/ADRs/notes/preferreds/warrants/units/rights via `us_company_profile.security_type`.
+
 If you need a ratio (P/E, P/B, ROE, debt ratios), **compute it from the raw quarterly statements**. Example:
 ```python
 from finlab import data
