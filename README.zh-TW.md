@@ -28,3 +28,9 @@ curl -sSf https://ai.finlab.finance/install.sh | sh
 | Factor Examples | 60+ 完整策略範例 |
 | Best Practices | 模式、反模式、技巧 |
 | ML Reference | 特徵工程、標籤生成 |
+
+## 學習資源
+
+- [量化交易完整教學](https://finlab.finance/tools/quant-trading)：什麼是量化交易、台股策略回測器與平台比較。
+- [策略研究部落格](https://finlab.finance/blog)：經過回測驗證的台股策略報告（CAGR、夏普、最大回撤）。
+- 官方網站：[finlab.finance](https://finlab.finance)

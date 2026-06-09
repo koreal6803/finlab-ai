@@ -28,3 +28,9 @@ Auto-detects your CLI (Claude Code / Codex / Gemini), installs [uv](https://docs
 | Factor Examples | 60+ complete strategy examples |
 | Best Practices | Patterns, anti-patterns, tips |
 | ML Reference | Feature engineering, labels |
+
+## Learn more
+
+- [Quant trading guide (量化交易)](https://finlab.finance/tools/quant-trading): what quantitative trading is, a Taiwan-stock strategy backtester, and a platform comparison.
+- [Strategy research blog](https://finlab.finance/blog): backtest-verified Taiwan-stock strategy reports (CAGR, Sharpe, max drawdown).
+- Website: [finlab.finance](https://finlab.finance)
