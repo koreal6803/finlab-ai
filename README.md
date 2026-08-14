@@ -21,6 +21,16 @@ curl -sSf https://ai.finlab.finance/install.sh | sh
 
 Auto-detects your CLI (Claude Code / Codex / Gemini), installs [uv](https://docs.astral.sh/uv/) if needed, and sets up the skill.
 
+## MCP Server
+
+A hosted, read-only MCP server (streamable HTTP) is available — no install required:
+
+```bash
+claude mcp add --transport http finlab https://mcp.finlab.finance/mcp
+```
+
+Tools: `list_strategies`, `get_strategy` (with Python code), `get_stock_evidence`, `get_data_catalog`, `how_to_start`. Listed on the [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=finlab-ai) as `io.github.koreal6803/finlab-ai` (see [server.json](server.json)). The old `finlab-ai.koreal6803.workers.dev` endpoint is retired.
+
 ## Documentation
 
 | Document | Content |
