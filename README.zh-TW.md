@@ -29,7 +29,7 @@ curl -sSf https://ai.finlab.finance/install.sh | sh
 claude mcp add --transport http finlab https://mcp.finlab.finance/mcp
 ```
 
-工具：`list_strategies`、`get_strategy`（含 Python 程式碼）、`get_stock_evidence`、`get_data_catalog`、`how_to_start`。已登錄 [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=finlab-ai)（`io.github.koreal6803/finlab-ai`，見 [server.json](server.json)）。舊的 `finlab-ai.koreal6803.workers.dev` endpoint 已停用。
+工具：`list_strategies`、`get_strategy`（含 Python 程式碼）、`get_stock_evidence`、`get_data_catalog`、`get_finlab_docs`（本 skill 文件，與 main 分支即時同步）、`how_to_start`。已登錄 [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=finlab-ai)（`io.github.koreal6803/finlab-ai`，見 [server.json](server.json)）。舊的 `finlab-ai.koreal6803.workers.dev` endpoint 已停用。
 
 ## 文件說明
 

@@ -29,7 +29,7 @@ A hosted, read-only MCP server (streamable HTTP) is available — no install req
 claude mcp add --transport http finlab https://mcp.finlab.finance/mcp
 ```
 
-Tools: `list_strategies`, `get_strategy` (with Python code), `get_stock_evidence`, `get_data_catalog`, `how_to_start`. Listed on the [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=finlab-ai) as `io.github.koreal6803/finlab-ai` (see [server.json](server.json)). The old `finlab-ai.koreal6803.workers.dev` endpoint is retired.
+Tools: `list_strategies`, `get_strategy` (with Python code), `get_stock_evidence`, `get_data_catalog`, `get_finlab_docs` (this skill's docs, always in sync with main), `how_to_start`. Listed on the [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=finlab-ai) as `io.github.koreal6803/finlab-ai` (see [server.json](server.json)). The old `finlab-ai.koreal6803.workers.dev` endpoint is retired.
 
 ## Documentation
 
