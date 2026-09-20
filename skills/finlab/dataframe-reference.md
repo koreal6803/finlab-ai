@@ -723,8 +723,8 @@ expensive = close > close.quantile_row(0.9)
 df.cs.rank() -> FinlabDataFrame               # percentile rank per row (0~1)
 df.cs.zscore() -> FinlabDataFrame              # (x - mean) / std per row
 df.cs.demean() -> FinlabDataFrame              # x - mean per row
-df.cs.winsorize(lower=0.01, upper=0.99) -> FinlabDataFrame  # clip to quantile band
-df.cs.bucket(n=5) -> FinlabDataFrame           # equal-quantile bucketing (0..n-1)
+df.cs.winsorize(lower=0.05, upper=0.95) -> FinlabDataFrame  # clip to quantile band
+df.cs.bucket(n) -> FinlabDataFrame             # required n; bucket labels 1..n
 ```
 
 **Example:**
@@ -738,7 +738,8 @@ factor = pb.cs.winsorize(0.01, 0.99).cs.zscore()
 
 # Sort into 5 equal-size buckets per day
 buckets = pb.cs.bucket(5)
-top_bucket = buckets == 4  # cheapest bucket
+cheap_bucket = buckets == 1  # lowest P/B quintile
+top_bucket = buckets == 5    # highest P/B quintile
 
 # Demean to remove daily market average
 factor_neutral = pb.cs.demean()
@@ -809,7 +810,7 @@ industry_median = pb.sector.median()
 cheap_vs_industry = pb < industry_median
 
 # Pick cheapest quintile within each industry
-cheap_bucket = pb.sector.bucket(5) == 0
+cheap_bucket = pb.sector.bucket(5) == 1
 ```
 
 **Relationship to `industry_rank` / `neutralize_industry`:** `industry_rank()` is equivalent to `df.sector.rank()`. `neutralize_industry()` removes industry means via regression; `df.sector.demean()` does the same via direct subtraction — use `demean()` when you just need industry-centered values and `neutralize_industry()` when you also want to neutralize additional factors jointly.
