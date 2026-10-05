@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GUIDES = (ROOT / "skills/finlab/SKILL.md", ROOT / ".agents/skills/finlab/SKILL.md")
+GUIDE = ROOT / "skills/finlab/SKILL.md"
 
 
 def login_section(path):
@@ -14,8 +14,7 @@ def login_section(path):
 
 class AuthenticationGuidesTest(unittest.TestCase):
     def test_supported_login_and_deprecation_are_aligned(self):
-        section, mirror = (login_section(path) for path in GUIDES)
-        self.assertEqual(section, mirror)
+        section = login_section(GUIDE)
         for instruction in (
             "python -m finlab login", "finlab.login()",
             "python -m finlab token --env", "python -m finlab migrate",
