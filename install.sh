@@ -17,6 +17,14 @@ ok()    { printf "${GREEN}%s${RESET}\n" "$1"; }
 warn()  { printf "${YELLOW}%s${RESET}\n" "$1"; }
 err()   { printf "${RED}%s${RESET}\n" "$1" >&2; }
 
+finish() {
+  echo ""
+  ok "Done! FinLab AI skill installed for: $TARGETS"
+  echo ""
+  echo "  Start any CLI and try: /finlab"
+  echo ""
+}
+
 # --- Detect all installed CLIs ---
 TARGETS=""
 command -v claude  >/dev/null 2>&1 && TARGETS="$TARGETS claude-code"
@@ -24,7 +32,7 @@ command -v codex   >/dev/null 2>&1 && TARGETS="$TARGETS codex"
 command -v cursor  >/dev/null 2>&1 && TARGETS="$TARGETS cursor"
 command -v windsurf >/dev/null 2>&1 && TARGETS="$TARGETS windsurf"
 command -v gemini  >/dev/null 2>&1 && TARGETS="$TARGETS gemini-cli"
-TARGETS=$(echo "$TARGETS" | xargs)
+TARGETS=${TARGETS# }
 
 skill_dir() {
   case "$1" in
@@ -72,16 +80,9 @@ fi
 # Try npx first (installs for ALL detected agents at once)
 if command -v npx >/dev/null 2>&1; then
   info "Installing via npx for: $TARGETS"
-  AGENT_FLAGS=""
-  for t in $TARGETS; do
-    AGENT_FLAGS="$AGENT_FLAGS -a $t"
-  done
+  AGENT_FLAGS=$(printf ' -a %s' $TARGETS)
   if npx skills add "$REPO" $AGENT_FLAGS -y 2>/dev/null; then
-    echo ""
-    ok "Done! FinLab AI skill installed for: $TARGETS"
-    echo ""
-    echo "  Start any CLI and try: /finlab"
-    echo ""
+    finish
     exit 0
   fi
   warn "npx method failed, falling back to git clone..."
@@ -105,8 +106,4 @@ for t in $TARGETS; do
   cp -r "$TMP/finlab-ai/$SKILL_SRC" "$DEST"
 done
 
-echo ""
-ok "Done! FinLab AI skill installed for: $TARGETS"
-echo ""
-echo "  Start any CLI and try: /finlab"
-echo ""
+finish

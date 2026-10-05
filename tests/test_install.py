@@ -19,7 +19,7 @@ class InstallTest(unittest.TestCase):
                 'codex': 'exit 0',
                 'uv': 'exit 0',
                 'npx': 'exit 1',
-                'git': 'mkdir -p "$5"; cp -R "$SKILL_TEST_REPO/skills" "$5/skills"',
+                'git': 'for dest; do :; done; mkdir -p "$dest"; cp -R "$SKILL_TEST_REPO/skills" "$dest/skills"',
             }
             for name, body in commands.items():
                 command = bin_dir / name
@@ -31,9 +31,9 @@ class InstallTest(unittest.TestCase):
                                     cwd=sandbox, env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             installed = sandbox / '.codex/skills/finlab'
-            self.assertEqual((installed / 'SKILL.md').read_text(),
-                             (ROOT / 'skills/finlab/SKILL.md').read_text())
-            for target in re.findall(r'\]\(([^)]+\.md)\)', (installed / 'SKILL.md').read_text()):
+            skill = (installed / 'SKILL.md').read_text()
+            self.assertEqual(skill, (ROOT / 'skills/finlab/SKILL.md').read_text())
+            for target in re.findall(r'\]\(([^)]+\.md)\)', skill):
                 self.assertTrue((installed / target).is_file(), target)
 
     def test_only_complete_skill_is_discoverable(self):

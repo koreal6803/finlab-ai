@@ -395,8 +395,10 @@ sim(position, resample="M")
 ### Pattern 2: Backtest Within Date Range
 
 ```python
-sim(position.loc['2020':'2023'], resample="M")
+sim(position.loc['2020':], resample="M", end_date='2023-12-31')
 ```
+
+Slicing `position` alone does not stop the backtest; `end_date` cuts prices and the report too. See [backtesting-reference.md#end_date](backtesting-reference.md#end_date).
 
 ### Pattern 3: Optuna Parameter Optimization
 
