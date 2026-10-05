@@ -69,81 +69,43 @@ If your response requires the user to do ANYTHING other than read the answer, yo
 
    ```bash
    uv python install 3.12  # Ensure Python is available (skip if already installed)
-   uv pip install --system finlab python-dotenv 2>/dev/null || uv pip install finlab python-dotenv
+   uv pip install --system finlab 2>/dev/null || uv pip install finlab
    ```
 
    **Or use `uv run` for zero-setup execution** (recommended for one-off scripts):
 
    ```bash
-   uv run --with finlab --with python-dotenv python3 script.py
+   uv run --with finlab python3 script.py
    ```
 
    `uv run --with` auto-creates a temporary environment with dependencies — no venv management needed.
 
-3. **API Token is set** (required - finlab will fail without it):
+3. **Logged in to FinLab** (finlab >= 2.0; no legacy API token required):
 
-   > **Deprecation note:** `FINLAB_API_TOKEN` is deprecated and scheduled for removal after 2026/08/01. On finlab >= 2.0, prefer `python -m finlab login` (browser flow); for headless environments run `python -m finlab token --env` to export `FINLAB_REFRESH_TOKEN`, `FINLAB_SESSION_ID`, and `FINLAB_API_KEY` instead. The token flow below still works on current releases.
-
-   ```bash
-   echo $FINLAB_API_TOKEN
-   ```
-
-   **If empty, check for `.env` file first:**
+   **Desktop (has a browser):** log in once; credentials are cached locally:
 
    ```bash
-   cat .env 2>/dev/null | grep FINLAB_API_TOKEN
+   python -m finlab login
    ```
-
-   **If `.env` exists with token, load it in Python code:**
 
    ```python
-   from dotenv import load_dotenv
-   load_dotenv()  # Loads FINLAB_API_TOKEN from .env
-
-   from finlab import data
-   # ... proceed normally
+   import finlab
+   finlab.login()  # reuses cached credentials, or starts browser login if none
    ```
 
-   **If no token anywhere, authenticate the user:**
+   **Headless / cron / Docker:** on a machine with a browser, log in and run:
 
    ```bash
-   # 1. Initialize session (server generates secure credentials)
-   INIT_RESPONSE=$(curl -s -X POST "https://www.finlab.finance/api/auth/cli/init")
-   SESSION_ID=$(echo "$INIT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
-   POLL_SECRET=$(echo "$INIT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['pollSecret'])")
-   AUTH_URL=$(echo "$INIT_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['authUrl'])")
-
-   # 2. Open browser for user login
-   open "$AUTH_URL"
+   python -m finlab token --env
    ```
 
-   Tell user: **"Please click 'Sign in with Google' in the browser."**
+   Set all three exported variables — `FINLAB_REFRESH_TOKEN`, `FINLAB_SESSION_ID`, and `FINLAB_API_KEY` — in the headless environment. FinLab uses them automatically. Treat the output as credentials: use your platform's secret storage and do not paste it into chat or commit it.
 
-   ```bash
-   # 3. Poll for token with secret and save to .env
-   for i in {1..150}; do
-     RESULT=$(curl -s "https://www.finlab.finance/api/auth/poll?s=$SESSION_ID&secret=$POLL_SECRET")
-     if echo "$RESULT" | grep -q '"status":"success"'; then
-       TOKEN=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
-       export FINLAB_API_TOKEN="$TOKEN"
-       echo "FINLAB_API_TOKEN=$TOKEN" >> .env
-       grep -q "^\.env$" .gitignore 2>/dev/null || echo ".env" >> .gitignore
-       echo "Login successful! Token saved to .env"
-       break
-     fi
-     sleep 2
-   done
-   ```
+   **Google Colab:** run `finlab.login()` in a cell and follow the login link.
 
-### Why `.env`?
+   **Migrating from legacy tokens:** `FINLAB_API_TOKEN` and `finlab.login('<api_token>')` are deprecated. Run `python -m finlab migrate`, set up browser login or the three environment variables above, then remove the old token from your configuration.
 
-| Method                              | Persists?       | Cross-platform?       | AI can read?         |
-| ----------------------------------- | --------------- | --------------------- | -------------------- |
-| Shell profile (`.zshrc`, `.bashrc`) | ✅              | ❌ varies by OS/shell | ❌ often not sourced |
-| `finlab.login('XXX')`               | ❌ session only | ✅                    | ✅                   |
-| `.env` + `python-dotenv`            | ✅              | ✅                    | ✅                   |
-
-**Recommendation:** Always use `.env` for persistent, cross-platform token storage.
+   **Legacy-token status:** No removal version or date is publicly confirmed in the [official authentication guide](https://finlab.finance/docs/reference/finlab/); the `2026/08/01` date in client warning text is not a removal announcement. Dropping the **client-side** fallback and rejecting legacy tokens **server-side** are separate changes, and a cached `data.get()` call does not test server authentication — use the supported login flow above.
 
 ## Language
 
@@ -202,9 +164,6 @@ Want deeper analysis? Upgrade to VIP for:
 ## Quick Start Example
 
 ```python
-from dotenv import load_dotenv
-load_dotenv()  # Load FINLAB_API_TOKEN from .env
-
 from finlab import data
 from finlab.backtest import sim
 
