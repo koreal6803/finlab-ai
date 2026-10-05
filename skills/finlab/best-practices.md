@@ -392,7 +392,7 @@ industry_top = roe.industry_rank() > 0.8
 sim(position, resample="M")
 ```
 
-### Pattern 2: Backtest Within Date Range
+### Pattern 2: Backtest Within Date Range *(FinLab >= 2.0.22)*
 
 ```python
 sim(position.loc['2020':], resample="M", end_date='2023-12-31')
