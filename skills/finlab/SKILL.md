@@ -41,26 +41,34 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
    **Prefer zero-install?** Run notebooks directly in [FinLab Studio](https://studio.finlab.finance) — a hosted Jupyter environment with `finlab` preinstalled and your account already logged in.
 
-3. **Logged in to FinLab** (required - data access fails without it):
+3. **Logged in to FinLab** (finlab >= 2.0; no legacy API token required):
 
-   **Desktop (has a browser):** log in once, then just import:
+   **Desktop (has a browser):** log in once; credentials are cached locally:
 
    ```bash
-   python -m finlab login   # opens the FinLab (Firebase) browser login; credentials are cached locally
+   python -m finlab login
    ```
 
    ```python
-   import finlab            # cached credentials are picked up automatically
-   finlab.login()           # optional: reuses cached credentials, or starts the browser login if none
+   import finlab
+   finlab.login()  # reuses cached credentials, or starts browser login if none
    ```
 
-   `finlab.login()` opens a FinLab browser login (Firebase auth). Without a TTY it prints a login URL that can be opened on any device.
+   **Headless / cron / Docker:** on a machine with a browser, log in and run:
 
-   **Headless / cron / Docker:** on a machine with a browser, log in and run `python -m finlab token --env`, then set the printed `FINLAB_REFRESH_TOKEN`, `FINLAB_SESSION_ID` and `FINLAB_API_KEY` environment variables on the headless machine.
+   ```bash
+   python -m finlab token --env
+   ```
 
-   **Google Colab:** run `finlab.login()` in a cell.
+   Set all three exported variables — `FINLAB_REFRESH_TOKEN`, `FINLAB_SESSION_ID`, and `FINLAB_API_KEY` — in the headless environment. FinLab uses them automatically. Treat the output as credentials: use your platform's secret storage and do not paste it into chat or commit it.
 
-   Do not use `FINLAB_API_TOKEN` or `finlab.login('<api_token>')` — the legacy API-token login is deprecated (`python -m finlab migrate` shows the migration guide).
+   **Google Colab:** run `finlab.login()` in a cell and follow the login link.
+
+   **Migrating from legacy tokens:** `FINLAB_API_TOKEN` and `finlab.login('<api_token>')` are deprecated. Run `python -m finlab migrate`, set up browser login or the three environment variables above, then remove the old token from your configuration.
+
+   **Legacy-token status:** No removal version or date is publicly confirmed in the [official authentication guide](https://finlab.finance/docs/reference/finlab/). The historical `2026/08/01` date in client warning text is not a confirmed removal announcement.
+
+   Removing the environment-variable fallback from the Python package is a **client-side** change; rejecting legacy tokens on the authentication service is a separate **server-side** change. Neither a warning deadline nor a remaining client fallback proves server acceptance or rejection. A successful cached `data.get()` call does not test server authentication. Use the supported login flow above rather than relying on legacy-token availability.
 
 ## Language
 
