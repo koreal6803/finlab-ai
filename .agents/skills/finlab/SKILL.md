@@ -69,13 +69,13 @@ If your response requires the user to do ANYTHING other than read the answer, yo
 
    ```bash
    uv python install 3.12  # Ensure Python is available (skip if already installed)
-   uv pip install --system finlab python-dotenv 2>/dev/null || uv pip install finlab python-dotenv
+   uv pip install --system finlab 2>/dev/null || uv pip install finlab
    ```
 
    **Or use `uv run` for zero-setup execution** (recommended for one-off scripts):
 
    ```bash
-   uv run --with finlab --with python-dotenv python3 script.py
+   uv run --with finlab python3 script.py
    ```
 
    `uv run --with` auto-creates a temporary environment with dependencies — no venv management needed.
@@ -105,9 +105,7 @@ If your response requires the user to do ANYTHING other than read the answer, yo
 
    **Migrating from legacy tokens:** `FINLAB_API_TOKEN` and `finlab.login('<api_token>')` are deprecated. Run `python -m finlab migrate`, set up browser login or the three environment variables above, then remove the old token from your configuration.
 
-   **Legacy-token status:** No removal version or date is publicly confirmed in the [official authentication guide](https://finlab.finance/docs/reference/finlab/). The historical `2026/08/01` date in client warning text is not a confirmed removal announcement.
-
-   Removing the environment-variable fallback from the Python package is a **client-side** change; rejecting legacy tokens on the authentication service is a separate **server-side** change. Neither a warning deadline nor a remaining client fallback proves server acceptance or rejection. A successful cached `data.get()` call does not test server authentication. Use the supported login flow above rather than relying on legacy-token availability.
+   **Legacy-token status:** No removal version or date is publicly confirmed in the [official authentication guide](https://finlab.finance/docs/reference/finlab/); the `2026/08/01` date in client warning text is not a removal announcement. Dropping the **client-side** fallback and rejecting legacy tokens **server-side** are separate changes, and a cached `data.get()` call does not test server authentication — use the supported login flow above.
 
 ## Language
 
@@ -166,9 +164,6 @@ Want deeper analysis? Upgrade to VIP for:
 ## Quick Start Example
 
 ```python
-from dotenv import load_dotenv
-load_dotenv()  # Load FINLAB_API_TOKEN from .env
-
 from finlab import data
 from finlab.backtest import sim
 
