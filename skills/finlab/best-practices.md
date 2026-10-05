@@ -394,8 +394,10 @@ sim(position, resample="M")
 
 ### Pattern 2: Backtest Within Date Range
 
+Requires FinLab >= 2.0.22. See [end_date](backtesting-reference.md#end_date) for the inclusive cutoff.
+
 ```python
-sim(position.loc['2020':'2023'], resample="M")
+sim(position.loc['2020':], resample="M", end_date='2023-12-31')
 ```
 
 ### Pattern 3: Optuna Parameter Optimization

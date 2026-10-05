@@ -39,6 +39,7 @@ sim(
     market: Union[None, Market] = None,
     upload: Union[bool, None] = None,
     *,
+    end_date: Union[str, datetime.date, pd.Timestamp, None] = None,
     metrics_only: bool = False,
     notification_enable: bool = False,
     line_access_token: str = ''
@@ -136,6 +137,12 @@ sim(
 - **Type:** `Union[bool, None]`
 - **Default:** `None`
 - **Description:** Whether to upload the strategy performance report after simulation. With `None` (default), the report is uploaded only when the environment variable `FINLAB_STRATEGY_NAME` or `FINLAB_FORCED_STRATEGY_NAME` is set (FinLab Studio and cloud schedules set them), so a plain local run does not upload. `upload=True` forces an upload; `upload=False` never uploads.
+
+#### end_date
+- **Type:** `Union[str, datetime.date, pd.Timestamp, None]` (keyword-only)
+- **Default:** `None`
+- **Requires:** FinLab >= 2.0.22; upgrade with `uv pip install -U finlab` on older versions.
+- **Description:** Inclusive cutoff for positions, prices and the report. A bare date includes the entire day; positions still held at the cutoff remain open in `report.trades`. `None` infers the end from signal spacing.
 
 #### metrics_only
 - **Type:** `bool` (keyword-only)
