@@ -138,7 +138,7 @@ sim(
 - **Default:** `None`
 - **Description:** Whether to upload the strategy performance report after simulation. With `None` (default), the report is uploaded only when the environment variable `FINLAB_STRATEGY_NAME` or `FINLAB_FORCED_STRATEGY_NAME` is set (FinLab Studio and cloud schedules set them), so a plain local run does not upload. `upload=True` forces an upload; `upload=False` never uploads.
 
-#### end_date *(v2.0.22)*
+#### end_date
 - **Type:** `Union[str, datetime.date, pd.Timestamp, None]` (keyword-only)
 - **Default:** `None`
 - **Description:** Inclusive cutoff for positions, prices and the report. A bare date includes the entire day; positions still held at the cutoff remain open in `report.trades`. `None` infers the end from the signal spacing.
