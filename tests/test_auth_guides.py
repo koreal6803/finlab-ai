@@ -6,15 +6,15 @@ ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "skills/finlab/SKILL.md"
 
 
-def login_section(path):
-    text = path.read_text()
+def login_section():
+    text = GUIDE.read_text()
     start = text.index("3. **Logged in to FinLab**")
     return text[start:text.index("\n## ", start)]
 
 
-class AuthenticationGuidesTest(unittest.TestCase):
-    def test_supported_login_and_deprecation_are_aligned(self):
-        section = login_section(GUIDE)
+class AuthenticationGuideTest(unittest.TestCase):
+    def test_login_section_lists_supported_flows_and_deprecation(self):
+        section = login_section()
         for instruction in (
             "python -m finlab login", "finlab.login()",
             "python -m finlab token --env", "python -m finlab migrate",

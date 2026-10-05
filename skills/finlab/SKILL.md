@@ -359,7 +359,7 @@ Short version pointers for features added in recent releases. Each reference fil
 
 **v2.0.0** (2026-04-04) — major release
 - `finlab.exceptions`: structured error hierarchy (`FinlabError`, `DataError`, `BacktestError`, ...) — see [backtesting-reference.md](backtesting-reference.md)
-- `data.get(lazy=True)` / `data.gets(..., lazy=True)`: batch fetch + deferred compute; the `DataContext.override` context manager for scoped context state
+- `data.get(lazy=True)` / `data.gets(..., lazy=True)`: batch fetch + deferred compute; `DataContext.override` context manager for scoped state
 - `df.cs` / `df.sector` / `df.weight` accessors; `rolling().std/var/skew/kurt/median` — see [dataframe-reference.md](dataframe-reference.md)
 - `PositionStreamMixin` for realtime position streaming — see [trading-reference.md](trading-reference.md)
 - `from finlab import FinlabDataFrame` top-level export
