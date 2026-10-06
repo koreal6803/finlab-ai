@@ -46,7 +46,7 @@ features, labels = generate_features_and_labels({
 factor_return = calc_factor_return(features, labels)
 print(factor_return.head())
 
-# Calculate IC (Information Coefficient)
+# Calculate feature-rank/raw-label Pearson IC (not Spearman)
 ic_df = calc_ic(features, labels, rank=True)
 print(ic_df.mean())
 ```
@@ -143,7 +143,7 @@ cumulative_return.plot(figsize=(12, 6))
 
 ### calc_ic
 
-Calculate the correlation coefficient (IC) between features and labels. Optionally rank features first for Rank IC. Outputs starting from the first non-empty row.
+Calculate the correlation coefficient (IC) between features and labels. In FinLab 2.0.18, `rank=True` ranks features only, then computes Pearson correlation with unranked labels. This is not Spearman Rank IC and can have a different sign. With `rank=False`, output starts at the first date where all factor ICs are non-missing.
 
 **Signature:**
 ```python
@@ -157,10 +157,10 @@ calc_ic(
 **Parameters:**
 - `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex (date, stock_id) and factor names as columns
 - `labels` (pd.Series, required): Label Series with MultiIndex (date, stock_id)
-- `rank` (bool, optional, default=False): Whether to rank features first for calculating Rank IC
+- `rank` (bool, optional, default=False): Whether to rank features first, then compute Pearson correlation with unranked labels (not Spearman)
 
 **Returns:**
-- `pd.DataFrame`: IC values for each date and factor, starting from the first non-empty row
+- `pd.DataFrame`: IC values for each date and factor; the `rank=True` branch retains leading missing rows
 
 **Example:**
 ```python
@@ -178,7 +178,7 @@ features, labels = generate_features_and_labels({
     'momentum': price / price.shift(20) - 1 > 0,
 }, resample=revenue.index)
 
-# Calculate Rank IC
+# Calculate feature-rank/raw-label Pearson IC (not Spearman)
 ic_df = calc_ic(features, labels, rank=True)
 print(ic_df.head())
 
@@ -187,6 +187,31 @@ print(ic_df.mean())  # Mean IC
 print(ic_df.std())   # IC volatility
 print(ic_df.mean() / ic_df.std())  # IC IR (Information Ratio)
 ```
+
+
+### Spearman Rank IC and ICIR scale
+
+For true per-date Spearman Rank IC, use the same valid feature/label pairs for each factor. Ties receive average ranks; constant inputs return NaN. This self-contained example also demonstrates that ranking only features can reverse the sign:
+
+```python
+import pandas as pd
+from finlab.tools.factor_analysis import calc_ic
+
+idx = pd.MultiIndex.from_product(
+    [pd.to_datetime(["2026-01-31"]), list("abcdef")],
+    names=["datetime", "instrument"],
+)
+features = pd.DataFrame({"factor": range(1, 7)}, index=idx)
+labels = pd.Series([0.01, 0.02, 0.03, 0.04, 0.05, -1.0], index=idx)
+
+rank_ic = features.groupby(level=0).apply(
+    lambda group: group.corrwith(labels.reindex(group.index), method="spearman")
+)
+print(rank_ic)  # +0.142857
+print(calc_ic(features, labels, rank=True))  # -0.628875 in 2.0.18
+```
+
+ICIR per observation period is `rank_ic.mean() / rank_ic.std(ddof=1)`. If explicitly annualizing monthly observations by convention, multiply by `sqrt(12)` and label the result annualized: annualized 0.5 equals per-month 0.144338. Sampling frequency and forward-return horizon are separate settings. Square-root scaling does not correct serial dependence or overlapping labels; report uncertainty separately. Changing the IC definition requires recomputing affected summaries and thresholds.
 
 ---
 
@@ -434,7 +459,7 @@ features, labels = generate_features_and_labels({
 factor_return = calc_factor_return(features, labels)
 cumulative_return = (1 + factor_return).cumprod()
 
-# 4. Calculate IC
+# 4. Calculate feature-rank/raw-label Pearson IC (not Spearman)
 ic_df = calc_ic(features, labels, rank=True)
 print("Average IC:")
 print(ic_df.mean())
@@ -580,7 +605,7 @@ plt.show()
 
 ## Best Practices
 
-1. **Use Rank IC for robustness** - Rank IC is more stable than raw IC
+1. **Use Spearman Rank IC for rank dependence** - Correlate both rankings on the same valid pairs; `calc_ic(rank=True)` alone does not do this in 2.0.18
 2. **Analyze IC over time** - Look for consistent positive IC, not just average IC
 3. **Check IC trend** - Use calc_regression_stats to identify deteriorating factors
 4. **Calculate Shapley values** - Understand true factor contributions in multi-factor strategies
