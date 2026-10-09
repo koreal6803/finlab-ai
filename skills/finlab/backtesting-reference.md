@@ -451,19 +451,28 @@ report.to_html("report.html")  # the file is what the user opens
 
 ## Lookahead Bias Self-Check — `verify_strategy()`
 
-*(v1.5.8)* Before trusting a backtest, run the automated lookahead detector. It replays the strategy twice with truncated data and flags any positions that differ when they shouldn't — a classic signature of future data leaking into today's signal.
+*(v1.5.8)* When the user asks to check lookahead bias, `verify_strategy()` runs the full strategy once, then reruns it with data truncated at historical dates (`n_tests=5` by default). It compares trades before each cutoff to detect signals that depend on future data. This diagnostic runs multiple backtests and can be slow.
+
+Pass a zero-argument function that fetches data, builds positions, and returns the `Report` from `sim()` inside the function. Returning only a position DataFrame does not satisfy this contract.
 
 ```python
+from finlab import data
+from finlab.backtest import sim
 from finlab.verify import verify_strategy
 
-def build_position():
-    # ... your strategy that returns a position DataFrame
-    return position
+def my_strategy():
+    close = data.get('price:收盤價')
+    position = close == close.rolling(20).max()
+    return sim(position, resample='M', upload=False)
 
-verify_strategy(build_position)
+result = verify_strategy(my_strategy, n_tests=5)
+print(result.passed)
+print(result.summary_df)
+if not result.passed:
+    print(result.details)
 ```
 
-If it raises, the strategy's output changed depending on data only visible in the future — fix the signal before proceeding to live trading.
+The detector returns a `VerifyResult`; detected lookahead bias sets `result.passed` to `False` rather than raising an exception. Inspect `result.summary_df` and `result.details`, then fix the signal before live trading. See [best-practices.md](best-practices.md#-use-verify_strategy-to-auto-detect-lookahead-bias) for parameters and result fields.
 
 ---
 
