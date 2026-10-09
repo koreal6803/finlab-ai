@@ -310,6 +310,8 @@ def my_strategy():
 result = verify_strategy(my_strategy, n_tests=5)
 print(result.passed)       # True = no bias detected
 print(result.summary_df)   # Per-date test results
+if not result.passed:
+    print(result.details)
 ```
 
 **Parameters:**
@@ -318,7 +320,7 @@ print(result.summary_df)   # Per-date test results
 - `test_dates` (list[str], optional): Explicit dates (YYYY-MM-DD) to test in addition to random sample
 - `verbose` (bool, default=True): Print progress and summary
 
-**Returns:** `VerifyResult` with `.passed`, `.n_tests`, `.n_passed`, `.n_failed`, `.summary_df`, `.details`
+**Returns:** `VerifyResult` with `.passed`, `.n_tests`, `.n_passed`, `.n_failed`, `.summary_df`, `.details`. Detected bias sets `.passed` to `False`; it does not raise.
 
 ---
 

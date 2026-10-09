@@ -451,19 +451,7 @@ report.to_html("report.html")  # the file is what the user opens
 
 ## Lookahead Bias Self-Check — `verify_strategy()`
 
-*(v1.5.8)* Before trusting a backtest, run the automated lookahead detector. It replays the strategy twice with truncated data and flags any positions that differ when they shouldn't — a classic signature of future data leaking into today's signal.
-
-```python
-from finlab.verify import verify_strategy
-
-def build_position():
-    # ... your strategy that returns a position DataFrame
-    return position
-
-verify_strategy(build_position)
-```
-
-If it raises, the strategy's output changed depending on data only visible in the future — fix the signal before proceeding to live trading.
+*(v1.5.8)* `verify_strategy(strategy)` reruns a zero-argument function that fetches data and returns the `Report` from `sim()`, truncating data at historical dates, and returns a `VerifyResult` whose `.passed` is `False` when lookahead bias is detected. See [best-practices.md](best-practices.md#-use-verify_strategy-to-auto-detect-lookahead-bias) for the example, parameters, and result fields.
 
 ---
 
