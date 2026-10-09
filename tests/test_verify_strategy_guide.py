@@ -2,41 +2,42 @@ import re
 import sys
 import unittest
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
-from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from unittest.mock import ANY, MagicMock, patch
+
+
+ROOT = Path(__file__).resolve().parents[1]
+GUIDE = ROOT / "skills/finlab/best-practices.md"
+
+
+def verify_strategy_example():
+    text = GUIDE.read_text()
+    start = text.index("### ✅ Use `verify_strategy()`")
+    section = text[start:text.index("\n---", start)]
+    return re.search(r"```python\n(.*?)```", section, re.S).group(1)
 
 
 class VerifyStrategyGuideTest(unittest.TestCase):
     def test_example_returns_a_report_and_reads_verify_result(self):
-        guide = Path(__file__).resolve().parents[1] / "skills/finlab/backtesting-reference.md"
-        section = guide.read_text().split("## Lookahead Bias Self-Check", 1)[1].split("\n---", 1)[0]
-        code = re.search(r"```python\n(.*?)```", section, re.S).group(1)
-        data = ModuleType("finlab.data")
-        data.get = MagicMock(return_value=MagicMock())
-        backtest = ModuleType("finlab.backtest")
-        report = SimpleNamespace(trades=[])
-        backtest.sim = MagicMock(return_value=report)
-        verify = ModuleType("finlab.verify")
-        result = SimpleNamespace(passed=True, summary_df="summary", details=[])
+        finlab = MagicMock()
+        finlab.data.get.return_value.__gt__.return_value = MagicMock()
+        report = finlab.backtest.sim.return_value
+        result = SimpleNamespace(passed=False, summary_df="summary", details="details")
 
         def verify_strategy(strategy, n_tests=5):
             self.assertIs(strategy(), report)
-            self.assertEqual(strategy().trades, [])
             return result
 
-        verify.verify_strategy = verify_strategy
-        finlab = ModuleType("finlab")
-        finlab.data = data
-        with patch.dict(sys.modules, {"finlab": finlab, "finlab.data": data,
-                                     "finlab.backtest": backtest, "finlab.verify": verify}):
-            namespace = {}
-            with patch("builtins.print"):
-                exec(compile(code, str(guide), "exec"), namespace)
+        finlab.verify.verify_strategy = verify_strategy
+        modules = {"finlab": finlab, "finlab.data": finlab.data,
+                   "finlab.backtest": finlab.backtest, "finlab.verify": finlab.verify}
+        namespace = {}
+        with patch.dict(sys.modules, modules), patch("builtins.print") as printed:
+            exec(verify_strategy_example(), namespace)
+
         self.assertIs(namespace["result"], result)
-        self.assertEqual(backtest.sim.call_count, 2)
-        self.assertTrue(all(call.kwargs == {"resample": "M", "upload": False}
-                            for call in backtest.sim.call_args_list))
-        self.assertGreaterEqual(data.get.call_count, 2)
+        finlab.backtest.sim.assert_called_once_with(ANY, resample="M", upload=False)
+        printed.assert_any_call("details")
 
 
 if __name__ == "__main__":
