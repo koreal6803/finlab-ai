@@ -8,12 +8,11 @@ class PluginUpdatesTest(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         manifest = json.loads((root / '.claude-plugin/plugin.json').read_text())
         marketplace = json.loads((root / '.claude-plugin/marketplace.json').read_text())
-        entry = next(plugin for plugin in marketplace['plugins']
-                     if plugin['name'] == manifest['name'])
 
         # Either version field overrides git commit based update detection.
         self.assertNotIn('version', manifest)
-        self.assertNotIn('version', entry)
+        for plugin in marketplace['plugins']:
+            self.assertNotIn('version', plugin)
 
 
 if __name__ == '__main__':
