@@ -1,7 +1,6 @@
 {
   "name": "finlab-plugin",
   "description": "FinLab quantitative trading skills for global stock markets (TW, US, KR, JP, HK) - includes strategy development, backtesting, data analysis, and factor research",
-  "version": "1.2.3",
   "author": {
     "name": "FinLab Community"
   }
