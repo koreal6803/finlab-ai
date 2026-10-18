@@ -16,7 +16,8 @@ from finlab.ml import feature, label
 1. [Feature Engineering](#feature-engineering)
 2. [Label Generation](#label-generation)
 3. [Complete ML Workflow](#complete-ml-workflow)
-4. [Best Practices](#best-practices)
+4. [CPCV and label overlap](#cpcv-and-label-overlap)
+5. [Best Practices](#best-practices)
 
 ---
 
@@ -552,6 +553,35 @@ print(f"\nAverage R²: {np.mean(scores):.4f} (+/- {np.std(scores):.4f})")
 ```
 
 ---
+
+## CPCV and label overlap
+
+`finlab.ml.cpcv` provides `CPCV`, `cpcv_train_test_split`, and `cpcv_combine_splits`. Verified with FinLab 2.0.18:
+
+```python
+from datetime import timedelta
+import pandas as pd
+from finlab.ml.cpcv import cpcv_train_test_split
+
+# Synthetic panel: demonstrates splitting only, not an OOS performance claim.
+idx = pd.MultiIndex.from_product(
+    [pd.date_range("2020-01-31", periods=36, freq="ME"), ["a", "b"]],
+    names=["datetime", "instrument"],
+)
+X = pd.DataFrame({"feature": range(len(idx))}, index=idx)
+splits = list(cpcv_train_test_split(
+    X, num_splits=6, test_size=2,
+    perge_period=timedelta(days=40),  # illustrative calendar gap, not a universal default
+))
+assert len(splits) == 15
+for train_ids, test_ids in splits:
+    X_train, X_test = X.iloc[train_ids], X.iloc[test_ids]
+    assert set(train_ids).isdisjoint(test_ids)
+```
+
+The keyword is spelled `perge_period` in the current API. Its default is `timedelta(days=3)`, in calendar days. The implementation trims the end of a training bin when the following bin is a test bin. It does not inspect each label's actual start/end timestamps, does not provide a separate post-test embargo parameter, and does not guarantee all train/test label intervals are disjoint. A three-day default cannot certify monthly or longer forward labels. Audit actual label intervals on both sides of every test segment, remove overlapping training observations, and apply any required embargo explicitly before fitting. The example above exercises the splitter, not that full interval audit.
+
+CPCV combinations may train on dates later than a test segment, so they complement a chronological walk-forward/held-out test rather than replacing it. The 15 overlapping splits are not 15 independent experiments. Fit scaling, imputation, feature selection, and model tuning within each training fold only. The simple time-cut and TimeSeriesSplit examples in this reference also require label-overlap checks before use; splitting observation dates alone does not purge forward labels.
 
 ## Best Practices
 
