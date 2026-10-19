@@ -101,12 +101,14 @@ sim(
 #### trail_stop
 - **Type:** `Union[float, None]`
 - **Default:** `None`
-- **Description:** Trailing stop threshold. If set to None, trailing stop is disabled.
+- **Description:** Giveback from peak return, measured relative to the current cost basis. `None` disables the trailing stop. For a long position with `trade_at_price='close'` and `touched_exit=False`, an armed trailing stop signals an exit when `(peak_price - close) / cost_basis > abs(trail_stop)`, not when the price falls by that percentage of the peak. The inequality is strict: equality alone does not signal an exit (floating-point rounding can affect boundary comparisons). The signal fills on the next bar at the configured execution price, not at a guaranteed stop price.
+- **Example:** With cost basis 100, peak 150, `trail_stop=0.15` and `trail_stop_activation=0.20`, the trail is armed at +20% and the exit boundary is `150 - 0.15 * 100 = 135`. A close of 136 does not trigger; 135 is equality; 134 signals an exit. If the following bar closes at 133, close-price execution fills at 133. This is a 15-percentage-point return giveback, not a 15% fall from 150 (which would give 127.5).
+- **Rebalancing:** With the default `retain_cost_when_rebalance=False`, rebalancing resets the cost basis and tracked extrema; apply the formula within each unchanged-cost segment, not across the entire trade using its first entry price. `True` retains the cost basis. Intraday touch exits and short positions use their respective engine rules; the close-price long formula above should not be generalized to those paths.
 
 #### trail_stop_activation *(v2.0.12)*
 - **Type:** `Union[float, None]`
 - **Default:** `None`
-- **Description:** Unrealized-profit threshold (as a fraction, e.g. `0.05` = +5 %) that a position must reach before `trail_stop` is armed. While the position has not yet hit this gain, the trailing stop is dormant and only the static `stop_loss` (if set) applies. Once the gain is reached, the trail begins watermarking from the running peak as usual. `None` or `0` preserves the pre-2.0.12 behavior of arming `trail_stop` immediately. Works for both long and short positions in `sim()`; on `hold_until()` it controls the long-rotation trailing-take-profit path. Use this to let winners run past entry noise without giving back gains once a real trend forms — e.g. `trail_stop=0.08, trail_stop_activation=0.10` means "do nothing until +10 %, then trail 8 % off the high".
+- **Description:** Profit threshold that must be reached before `trail_stop` is armed (e.g. `0.20` means +20%). For a long position, activation occurs when the tracked peak price / current cost basis is at least `1 + abs(trail_stop_activation)`. Before activation, only the trailing stop is dormant; configured `stop_loss` and `take_profit` still apply. Once armed, the trail follows peak return using the cost-relative giveback described above. `None` or `0` arms the trail immediately. Supported for long and short positions in `sim()`; in `hold_until()` this parameter controls the long-rotation trailing-take-profit path.
 
 #### touched_exit
 - **Type:** `bool`
