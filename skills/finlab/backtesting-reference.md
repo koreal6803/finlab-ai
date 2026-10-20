@@ -138,7 +138,7 @@ sim(
 #### upload
 - **Type:** `Union[bool, None]`
 - **Default:** `None`
-- **Description:** Whether to upload the strategy performance report after simulation. `None` (default, *v2.0.24*) uploads only when `FINLAB_FORCED_STRATEGY_NAME` is set (cloud-scheduled runs, notebooks run on the FinLab Studio website); `FINLAB_STRATEGY_NAME` alone is not enough. Local scripts, Jupyter and Colab therefore do not upload unless you pass `upload=True` or call `report.upload()` on the returned report. `upload=False` never uploads.
+- **Description:** Whether to upload the strategy performance report after simulation. `None` (default) uploads only when `FINLAB_FORCED_STRATEGY_NAME` is set (cloud-scheduled runs, notebooks run on the FinLab Studio website); since *v2.1.0* `FINLAB_STRATEGY_NAME` alone is not enough (before 2.1.0 it also triggered an upload). Local scripts, Jupyter and Colab therefore do not upload unless you pass `upload=True` or call `report.upload()` on the returned report. `upload=False` never uploads.
 
 #### end_date *(v2.0.22)*
 - **Type:** `Union[str, datetime.date, pd.Timestamp, None]` (keyword-only)
