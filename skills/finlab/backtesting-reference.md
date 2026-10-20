@@ -138,7 +138,7 @@ sim(
 #### upload
 - **Type:** `Union[bool, None]`
 - **Default:** `None`
-- **Description:** Whether to upload the strategy performance report after simulation. With `None` (default, *v2.0.24*), the report is uploaded only when the environment variable `FINLAB_FORCED_STRATEGY_NAME` is set, as in cloud-scheduled runs and notebooks the user runs on the FinLab Studio website. `FINLAB_STRATEGY_NAME` alone does not upload, so local scripts, Jupyter and Colab do not upload by default; pass `upload=True` or call `report.upload()` afterwards to upload from them. `upload=False` never uploads.
+- **Description:** Whether to upload the strategy performance report after simulation. `None` (default, *v2.0.24*) uploads only when `FINLAB_FORCED_STRATEGY_NAME` is set (cloud-scheduled runs, notebooks run on the FinLab Studio website); `FINLAB_STRATEGY_NAME` alone is not enough. Local scripts, Jupyter and Colab therefore do not upload unless you pass `upload=True` or call `report.upload()` on the returned report. `upload=False` never uploads.
 
 #### end_date *(v2.0.22)*
 - **Type:** `Union[str, datetime.date, pd.Timestamp, None]` (keyword-only)
@@ -190,10 +190,10 @@ print(f"Total Return: {stats['total_return']:.2%}")
 
 **Available keys in `get_stats()`:**
 - `cagr` - Compound Annual Growth Rate
-- `daily_sharpe` - Daily Sharpe ratio (same value as `metrics.sharpe_ratio()` and `get_metrics()['ratio']['sharpeRatio']`)
+- `daily_sharpe` - Daily Sharpe ratio (equals `get_metrics()['ratio']['sharpeRatio']`)
 - `monthly_sharpe` - Monthly Sharpe ratio
 - `max_drawdown` - Maximum drawdown (negative value)
-- `win_ratio` - Win rate of closed trades only (`metrics.win_rate()` also counts open trades)
+- `win_ratio` - Win rate of closed trades
 - `total_return` - Total cumulative return
 - `start` - Backtest start date (string)
 - `end` - Backtest end date (string)
@@ -229,7 +229,7 @@ report.to_html(path: str, title: str | None = None) -> None
 
 **Parameters:**
 - `path` (str, required): output file path; pass a `.html` filename, the file is written in place
-- `title` (str, optional, *v2.0.12*): browser-tab title for the exported page. Defaults to `FinLab Report`; the `sim(name=...)` strategy name is not used. Set this when delivering several reports so the user can tell tabs apart at a glance. The FinLab favicon is bundled into the file automatically (also v2.0.12).
+- `title` (str, optional, *v2.0.12*): browser-tab title for the exported page. Defaults to `FinLab Report`, not the `sim(name=...)` strategy name. Set this when delivering several reports so the user can tell tabs apart at a glance. The FinLab favicon is bundled into the file automatically (also v2.0.12).
 
 **What the file contains:** a single self-contained HTML page (open in any browser, no server) with
 - equity curve and benchmark overlay
@@ -258,7 +258,7 @@ sim(pos_b, name="Value").to_html("value.html", title="Value")
 # Display interactive report inside Jupyter / IPython only
 report.display()
 
-# Get every trade as a DataFrame (the HTML embeds only the most recent 500)
+# Get every trade as a DataFrame
 trades_df = report.get_trades()
 
 # Persist the full Report object (for later re-rendering / programmatic access)
@@ -270,7 +270,7 @@ report.run_analysis("Drawdown")
 report.run_analysis("MaeMfe")
 
 # ASCII fallback for terminals without a browser — supplement, not replacement
-# Requires the terminal extra: pip install 'finlab[terminal]'
+# Requires: pip install 'finlab[terminal]'
 report.to_terminal()
 report.to_terminal(height=8, width=60, show_benchmark=False)
 ```
@@ -282,7 +282,7 @@ report.to_terminal(height=8, width=60, show_benchmark=False)
 | Annual Return | `annual_return()` | `'cagr'` |
 | Sharpe Ratio | `sharpe_ratio()` | `'daily_sharpe'` |
 | Max Drawdown | `max_drawdown()` | `'max_drawdown'` |
-| Win Rate | `win_rate()` (includes open trades) | `'win_ratio'` (closed trades only; not equal) |
+| Win Rate | `win_rate()` (includes open trades) | `'win_ratio'` (closed trades only) |
 | Total Return | - | `'total_return'` |
 
 ---
@@ -466,7 +466,7 @@ report.to_html("report.html")  # the file is what the user opens
 from finlab.exceptions import (
     FinlabError,      # root — catch-all for finlab-specific errors
     DataError,        # data fetch / parsing / schema
-    BacktestError,    # defined but not raised: sim() raises ValueError / TypeError
+    BacktestError,    # defined but not raised
     BrokerError,      # broker account / order submission
     AuthError,        # login / token refresh
     PortfolioError,   # PortfolioSyncManager sync failures
@@ -481,7 +481,7 @@ except (ValueError, TypeError) as e:
     logger.warning(f"backtest failed: {e}")
 ```
 
-Catch `DataError` first: some download errors subclass both `DataError` and `ValueError`.
+Catch `DataError` first: some download errors also subclass `ValueError`.
 
 ---
 
