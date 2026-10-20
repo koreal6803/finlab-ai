@@ -179,7 +179,7 @@ condition = (close > 99.9) & (close < 100.1)
 
 ### ❌ Don't Manually Align FinLabDataFrame Frequencies
 
-**Reason:** FinLabDataFrame already automatically aligns indices/columns. When quarterly string-index data is combined with daily data through FinLabDataFrame operators or boolean indexing, internal `reshape()` calls `index_str_to_date()` automatically, then forward-fills on the combined date grid. This applies to both Taiwan data such as `fundamental_features:*` and US data such as `us_income_statement:*` / `us_balance_sheet:*`. `monthly_revenue:*` already has a DatetimeIndex of disclosure deadlines (the 10th of the following month, next trading day if a holiday) and forward-fills the same way.
+**Reason:** FinLabDataFrame aligns indices and columns automatically. When quarterly string-index data (Taiwan `fundamental_features:*`, US `us_income_statement:*` / `us_balance_sheet:*`) meets daily data through operators or boolean indexing, internal `reshape()` calls `index_str_to_date()`, then forward-fills on the combined date grid. `monthly_revenue:*` is already indexed by disclosure deadline and forward-fills the same way.
 
 ```python
 # Automatic PIT alignment
@@ -272,6 +272,7 @@ selected = latest_pe.loc[common][latest_combined.loc[common]]
 # ✅ GOOD - leave index as-is
 revenue = data.get("monthly_revenue:當月營收")
 # Index is the disclosure deadline: 2022-01-10 holds December 2021 revenue
+# (10th of the following month, next trading day if a holiday)
 # FinLabDataFrame operators align dates and stock columns automatically
 position = revenue > revenue.shift(1)
 ```
@@ -463,19 +464,15 @@ sim(position, resample="M", resample_offset="7D")
 sim(position, resample="Q", resample_offset="30D")
 ```
 
-Use fixed-day offsets: `"1W"` snaps to the next Sunday (1–7 days later), and `"1M"` raises `ValueError` in pandas 3.
+Use fixed-day offsets: `"1W"` snaps to the next Sunday, and `"1M"` raises `ValueError` in pandas 3.
 
 ---
 
 ## Error Handling
 
-### Error: `_ArrayMemoryError`
+### Error: `_ArrayMemoryError` / `requests.exceptions.ConnectionError`
 
-**Solution:** Restart the Python kernel and try again. In FinLab Studio, call the `resetKernel` tool; it is not a Python function, so outside Studio restart the Python process instead.
-
-### Error: `requests.exceptions.ConnectionError`
-
-**Solution:** Restart the Python kernel the same way and retry.
+**Solution:** Restart the Python kernel or process, then retry. In FinLab Studio, use the `resetKernel` tool; it is not a Python function.
 
 ### Error: 用量超限 (Quota Exceeded)
 
