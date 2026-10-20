@@ -90,6 +90,8 @@ Quarterly tables use a string index of the form `"<YYYY>-US-Q<N>"`, e.g. `"2024-
 
 `us_index_constituents:sp500` and `us_index_constituents:nasdaq100` are daily boolean membership tables starting **2015-01-02** (True = index member that day), so they cover the whole `us_price` history. `data.us_universe(index=...)` does **not** use that history: it takes the table's **latest** row and applies today's members to every historical date, which builds survivorship and look-ahead bias into any backtest run inside it. For historical membership, mask with `us_index_constituents:*` (§5.2).
 
+The S&P 500 history before 2022-11-08 is rebuilt from archived Wikipedia snapshots carried forward between observations (median gap 8 days, max 36), so a change can show up a few weeks after its effective date; from 2022-11-08 it is a daily snapshot. NASDAQ 100 dates follow recorded index changes. The mask removes survivorship bias but is not an exact effective-date record.
+
 ### 1.5 `us_earnings_surprises` sparsity
 
 Density is ~0.64% (262K non-null cells across 3,415 dates × 12,077 tickers). Post-earnings-announcement-drift (PEAD) strategies that require dense daily surprise data are not viable from this table. Event-based joins (look up a single stock on its announcement date) work fine; rolling cross-sectional factors do not.
@@ -103,7 +105,7 @@ FinLab aligns US quarterly fundamentals on `key_date`, **not** `original_date` (
 - When FMP supplies the real SEC filing date, `key_date == filing_date`.
 - About 23% of (quarter, stock) rows only carry a placeholder `filing_date` equal to the period end (or the day after). For those, `key_date` = period end + filing deadline: 45 days for a US company's 10-Q, 90 days for its 10-K, 120 days for filers without a US deadline (foreign issuers, funds).
 
-For the publication date (e.g. in an event study), use `data.get('us_income_statement:key_date')`, not the raw `filing_date` column, which on placeholder rows is the period end.
+`key_date` is the right date for backtest alignment. For an event study that needs the actual disclosure date, neither column has it on placeholder rows: `filing_date` is the period end (too early) and `key_date` is the deadline (the latest possible date). Keep only rows where `data.get('us_income_statement:key_date')` equals `data.get('us_income_statement:filing_date')`, or treat the others as estimated dates.
 
 Worked example — AAPL 2024-US-Q3:
 
