@@ -31,7 +31,7 @@ from finlab.schemas import (
 
 The `Position` class represents target holdings and provides methods for converting backtest results to executable positions.
 
-`quantity` is in board lots (張), not shares: one Taiwan lot is 1,000 shares and the decimal part is odd-lot shares. Negative quantities are short positions.
+`quantity` is in board lots (張), not shares: one Taiwan lot is 1,000 shares, so `{'2330': 1}` is 1,000 shares and `1.001` is 1 lot + 1 odd-lot share. Negative quantities are short positions.
 
 **Import:**
 ```python
@@ -366,11 +366,18 @@ executor.cancel_orders()
 **Signature:**
 ```python
 executor.generate_orders(
+    progress: float = 1,
+    progress_precision: int | None = 0,
     as_entries: bool | None = None,   # None → list[dict]
     quantity_type: str = 'decimal'    # 'decimal' | 'float' | 'string'
 ) -> list[dict] | list[OrderEntry]
 
-executor.generate_order_entries(quantity_type: str = 'decimal') -> list[OrderEntry]  # typed convenience API
+# typed convenience API
+executor.generate_order_entries(
+    progress: float = 1,
+    progress_precision: int = 0,
+    quantity_type: str = 'decimal'
+) -> list[OrderEntry]
 ```
 
 `quantity` is in lots (see [Position Class](#position-class)): positive = buy, negative = sell. `quantity_type` sets the Python type of `OrderEntry.quantity`, not its unit, and is ignored when `generate_orders()` returns dicts.
