@@ -13,7 +13,7 @@ FinlabDataFrame is a powerful extension of pandas DataFrame specifically designe
 - Multi-factor and industry neutralization
 - Integration with backtesting workflows
 
-**Contents:** [Constructor](#constructor) | [Index Conversion](#index-conversion-methods) | [Moving Average & Comparison](#moving-average--comparison-methods) | [Selection](#selection-methods) | [Signal Detection](#signal-detection-methods) | [Industry & Category](#industry--category-methods) | [Neutralization](#neutralization-methods) | [Quantile](#quantile-methods) | [Cross-Sectional (`.cs`)](#cross-sectional-accessor-cs) | [Within-Industry (`.sector`)](#within-industry-accessor-sector) | [Portfolio Weight (`.weight`)](#portfolio-weight-accessor-weight) | [Rolling Extensions](#rolling-extensions) | [Auto Alignment](#automatic-index-alignment) | [Method Chaining](#method-chaining-patterns)
+**Contents:** [Constructor](#constructor) | [Index Conversion](#index-conversion-methods) | [Moving Average & Comparison](#moving-average--comparison-methods) | [Selection](#selection-methods) | [Signal Detection](#signal-detection-methods) | [Industry & Category](#industry--category-methods) | [Neutralization](#neutralization-methods) | [Quantile](#quantile-methods) | [Cross-Sectional (`.cs`)](#cross-sectional-accessor-cs) | [Within-Industry (`.sector`)](#within-industry-accessor-sector) | [Portfolio Weight (`.weight`)](#portfolio-weight-accessor-weight) | [Rolling Statistics](#rolling-statistics) | [Auto Alignment](#automatic-index-alignment) | [Method Chaining](#method-chaining-patterns)
 
 ---
 
@@ -54,9 +54,9 @@ price_df = data.get('price:收盤價')  # Returns a FinlabDataFrame
 
 ### index_str_to_date
 
-Converts string-formatted financial report indices (e.g., "2022-Q1", "2022-M01") to datetime format based on actual disclosure dates.
+Converts quarterly string indices (e.g., "2022-Q1") to the dates each company actually disclosed its report. The result has one row per disclosure date, not one row per quarter. Monthly string indices (e.g., "2022-M01") are returned unchanged.
 
-For normal factor construction, you usually do not need to call this manually. FinlabDataFrame operators and boolean indexing call internal `reshape()`, which automatically applies `index_str_to_date()` when monthly or quarterly string-index data is combined with daily data, then forward-fills on the combined date grid. This is the same for Taiwan monthly/quarterly data and US quarterly fundamentals. Call `index_str_to_date()` explicitly only when you need the dated index object itself, for example to inspect disclosure dates, extract a rebalance schedule, resample, or use pandas-native operations outside FinlabDataFrame alignment.
+For normal factor construction, you usually do not need to call this manually. FinlabDataFrame operators and boolean indexing call internal `reshape()`, which automatically applies `index_str_to_date()` when quarterly string-index data is combined with daily data, then forward-fills on the combined date grid. This is the same for Taiwan quarterly data and US quarterly fundamentals. Call `index_str_to_date()` explicitly only when you need the dated index object itself, for example to inspect disclosure dates, extract a rebalance schedule, resample, or use pandas-native operations outside FinlabDataFrame alignment.
 
 **Signature:**
 ```python
@@ -64,7 +64,7 @@ index_str_to_date() -> FinlabDataFrame
 ```
 
 **Returns:**
-- FinlabDataFrame with datetime index based on actual disclosure dates
+- FinlabDataFrame with one row per disclosure date (each quarter spreads over the days companies reported it)
 
 **Example:**
 ```python
@@ -76,7 +76,7 @@ print(cash.index[:3])  # ['2013-Q1', '2013-Q2', '2013-Q3']
 
 # Optional: convert explicitly only when you need the dated index itself
 cash_dated = cash.index_str_to_date()
-print(cash_dated.index[:3])  # DatetimeIndex(['2013-05-15', '2013-08-14', ...])
+print(cash_dated.index[:3])  # DatetimeIndex(['2013-04-19', '2013-04-24', '2013-04-25'])
 
 # Normal factor construction does not need explicit conversion
 close = data.get('price:收盤價')
@@ -447,8 +447,8 @@ hold_until(
     nstocks_limit: int = None,
     stop_loss: float = -np.inf,
     take_profit: float = np.inf,
-    trail_stop: float | None = None,
-    trail_stop_activation: float | None = None,
+    trail_stop: float = np.inf,
+    trail_stop_activation: float | None = 0,
     trade_at: str = 'close',
     rank: pd.DataFrame = None
 ) -> FinlabDataFrame
@@ -459,8 +459,8 @@ hold_until(
 - `nstocks_limit` (int, optional): Maximum number of stocks to hold simultaneously
 - `stop_loss` (float, optional, default=-np.inf): Stop loss threshold (e.g., 0.1 = exit if down 10%)
 - `take_profit` (float, optional, default=np.inf): Take profit threshold (e.g., 0.2 = exit if up 20%)
-- `trail_stop` (float, optional): Once armed, exits when `(peak_price - price) / entry_price > abs(trail_stop)`, where `price` is the adjusted `trade_at` price and `peak_price` its high since entry (e.g., entry 100, peak 150, 0.15 = exit below 135, not 127.5)
-- `trail_stop_activation` (float, optional, *v2.0.12*): Unrealized-gain threshold the position must reach before `trail_stop` arms. Until this gain is hit, only the static `stop_loss` applies. Useful when you want winners to clear entry noise (e.g. +10 %) before the trail starts ratcheting
+- `trail_stop` (float, optional, default=np.inf = off): Once armed, exits when `(peak_price - price) / entry_price > abs(trail_stop)`, where `price` is the adjusted `trade_at` price and `peak_price` its high since entry (e.g., entry 100, peak 150, 0.15 = exit below 135, not 127.5)
+- `trail_stop_activation` (float, optional, default=0, *v2.0.12*): Unrealized-gain threshold the position must reach before `trail_stop` arms; `0` (or `None`) arms it immediately. Until this gain is hit, `stop_loss` and `take_profit` still apply; only `trail_stop` waits. Useful when you want winners to clear entry noise (e.g. +10 %) before the trail starts ratcheting
 - `trade_at` (str, optional, default='close'): Price reference for stop/take profit ('close' or 'open')
 - `rank` (pd.DataFrame, optional): Ranking DataFrame for prioritizing entries when limit is reached (higher = priority)
 
@@ -503,11 +503,11 @@ Groups DataFrame columns by their industry category. Similar to `pandas.DataFram
 
 **Signature:**
 ```python
-groupby_category() -> pd.core.groupby.DataFrameGroupBy
+groupby_category() -> _CategoryGroupBy
 ```
 
 **Returns:**
-- A GroupBy object with groups defined by industry categories
+- A pandas-GroupBy-like object over industries; aggregations such as `.mean()` return a FinlabDataFrame (index = dates, columns = industry names such as `半導體業`)
 
 **Example:**
 ```python
@@ -519,7 +519,7 @@ pb = data.get('price_earning_ratio:股價淨值比')
 industry_pb = pb.groupby_category().mean()
 
 # Plot semiconductor industry P/B over time
-industry_pb['半導體'].plot(title='Semiconductor P/B Ratio')
+industry_pb['半導體業'].plot(title='Semiconductor P/B Ratio')
 ```
 
 ---
@@ -556,7 +556,7 @@ cheap_in_industry = pe_industry_rank < 0.3
 
 ### entry_price
 
-Retrieves the adjusted price at entry signal points.
+Returns the adjusted price (`etl:adj_close`, or `etl:adj_open` when `trade_at='open'`) on the trading day after each entry signal, forward-filled.
 
 **Signature:**
 ```python
@@ -574,13 +574,14 @@ entry_price(trade_at: str = 'close') -> FinlabDataFrame
 from finlab import data
 
 close = data.get('price:收盤價')
+adj_close = data.get('etl:adj_close')
 
 # Position signal
 position = close.is_largest(10)
 
-# Get entry prices for calculating returns
+# Entry prices are adjusted, so compare them with adjusted prices
 entry_prices = position.entry_price()
-current_return = close / entry_prices - 1
+current_return = adj_close / entry_prices - 1
 ```
 
 ---
@@ -657,6 +658,7 @@ neutralize_industry(
 
 **Example:**
 ```python
+import pandas as pd
 from finlab import data
 
 # P/E ratio varies significantly by industry
@@ -723,8 +725,8 @@ expensive = close > close.quantile_row(0.9)
 df.cs.rank() -> FinlabDataFrame               # percentile rank per row (0~1)
 df.cs.zscore() -> FinlabDataFrame              # (x - mean) / std per row
 df.cs.demean() -> FinlabDataFrame              # x - mean per row
-df.cs.winsorize(lower=0.01, upper=0.99) -> FinlabDataFrame  # clip to quantile band
-df.cs.bucket(n=5) -> FinlabDataFrame           # equal-quantile bucketing (0..n-1)
+df.cs.winsorize(lower=0.05, upper=0.95) -> FinlabDataFrame  # clip to quantile band
+df.cs.bucket(n) -> FinlabDataFrame             # equal-quantile buckets 1..n (1 = lowest, n = highest)
 ```
 
 **Example:**
@@ -738,7 +740,8 @@ factor = pb.cs.winsorize(0.01, 0.99).cs.zscore()
 
 # Sort into 5 equal-size buckets per day
 buckets = pb.cs.bucket(5)
-top_bucket = buckets == 4  # cheapest bucket
+cheapest = buckets == 1        # bucket 1 = lowest P/B
+most_expensive = buckets == 5  # bucket 5 = highest P/B
 
 # Demean to remove daily market average
 factor_neutral = pb.cs.demean()
@@ -770,8 +773,8 @@ df.sector.count()      # industry valid count
 df.sector.rank()
 df.sector.zscore()
 df.sector.demean()
-df.sector.winsorize(lower=0.01, upper=0.99)
-df.sector.bucket(n=5)
+df.sector.winsorize(lower=0.05, upper=0.95)
+df.sector.bucket(n)  # 1..n within each industry
 ```
 
 **Custom classification** *(v2.0.15)* — call the accessor with `by` to replace the default `security_categories` industry map. Works with every `sector.*` method:
@@ -789,7 +792,7 @@ Stocks not listed in `by` are excluded (NaN in the result) — a custom map defi
 
 ```python
 # Tilt within-industry ranks by a per-industry conviction weight
-score = roe.sector.rank() * roe.sector.map({'半導體': 1.2, '金融保險': 0.8})
+score = roe.sector.rank() * roe.sector.map({'半導體業': 1.2, '金融保險業': 0.8})
 ```
 
 Groups missing from `mapping` become NaN; NaN cells in the source stay NaN.
@@ -809,10 +812,10 @@ industry_median = pb.sector.median()
 cheap_vs_industry = pb < industry_median
 
 # Pick cheapest quintile within each industry
-cheap_bucket = pb.sector.bucket(5) == 0
+cheap_bucket = pb.sector.bucket(5) == 1
 ```
 
-**Relationship to `industry_rank` / `neutralize_industry`:** `industry_rank()` is equivalent to `df.sector.rank()`. `neutralize_industry()` removes industry means via regression; `df.sector.demean()` does the same via direct subtraction — use `demean()` when you just need industry-centered values and `neutralize_industry()` when you also want to neutralize additional factors jointly.
+**Relationship to `industry_rank` / `neutralize_industry`:** `industry_rank()` is not the same as `df.sector.rank()`. On Taiwan stocks `industry_rank()` ranks a stock within every theme it belongs to in `security_industry_themes` and averages those ranks; `sector.rank()` ranks within the single `security_categories` industry. `neutralize_industry()` removes industry means via regression on industry dummies; `df.sector.demean()` does the same via direct subtraction. `neutralize_industry()` takes no other factors — use `neutralize()` to remove factors such as size.
 
 ---
 
@@ -827,16 +830,16 @@ df.weight.by_group(weights, by=None, default=0.0)
 df.weight.inverse_volatility(window=60)
 df.weight.risk_parity(window=60)
 df.weight.correlation(diversify=True)
-df.weight.target_volatility(target=0.15, window=60)
-df.weight.limit_turnover(max_turnover=0.5)
-df.weight.drawdown_control(max_drawdown=0.1)
+df.weight.target_volatility(target, window=20)
+df.weight.limit_turnover(max_turnover)
+df.weight.drawdown_control(max_drawdown)
 ```
 
 | Method | Purpose |
 |--------|---------|
 | `cap_industry(max_weight)` | Cap the total weight per industry; redistribute excess proportionally to other holdings |
 | `clip_by_volume(total_fund, max_participation_ratio, volume, window)` | Clip per-stock weight so the traded notional stays within `max_participation_ratio` of average daily dollar volume; `window` (default 20) sets the ADV lookback days, `volume` overrides the dollar-volume source |
-| `by_group(weights, by, default)` *(v2.0.15)* | Allocate capital across groups: normalize holdings within each group so the group total equals its share in `weights` (e.g. `{'半導體': 0.5, '金融保險': 0.3}`). `by` accepts the same custom classification as `sector(by=...)`; `default` is the share for unlisted groups. Shares summing below 1 leave cash; a group with no holdings that day stays in cash; sums above 1 raise `ValueError` |
+| `by_group(weights, by, default)` *(v2.0.15)* | Allocate capital across groups: normalize holdings within each group so the group total equals its share in `weights` (e.g. `{'半導體業': 0.5, '金融保險業': 0.3}`). `by` accepts the same custom classification as `sector(by=...)`; `default` is the share for unlisted groups. Shares summing below 1 leave cash; a group with no holdings that day stays in cash; sums above 1 raise `ValueError` |
 | `inverse_volatility(window)` | Reweight so lower-volatility stocks get higher weights (1/σ scaling) |
 | `risk_parity(window)` | Equalize each holding's risk contribution |
 | `correlation(diversify=True)` | Adjust weights using correlation structure — `True` diversifies, `False` concentrates |
@@ -866,9 +869,9 @@ report = backtest.sim(weights, resample='M')
 
 ---
 
-## Rolling Extensions
+## Rolling Statistics
 
-*(v2.0.0)* `FinlabDataFrame.rolling(n)` now supports five additional statistical methods on top of pandas built-ins:
+`FinlabDataFrame.rolling(n)` is the pandas built-in; results stay FinlabDataFrame, so `.cs`, `.sector` and auto alignment work on them. Common window statistics:
 
 ```python
 df.rolling(n).std()     # rolling standard deviation
@@ -890,7 +893,7 @@ vol60 = returns.rolling(60).std()
 
 # High-skew stocks (positive tail)
 skew = returns.rolling(60).skew()
-lottery = skew > skew.cs.rank() > 0.8  # top 20% positive skew
+lottery = skew.cs.rank() > 0.8  # top 20% positive skew
 ```
 
 ---
@@ -924,7 +927,7 @@ position = cond1 & cond2
 ```
 
 **Alignment Rules:**
-1. Index: Union of both indices, forward-filled
+1. Index: Union of both indices from the later of the two start dates, forward-filled
 2. Columns: Intersection of both column sets
 3. String indices (e.g., "2022-Q1") are converted to datetime using disclosure dates
 
