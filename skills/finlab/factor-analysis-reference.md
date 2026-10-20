@@ -72,7 +72,7 @@ generate_features_and_labels(
 - `resample` (str, required): Resampling frequency string (e.g., 'M', 'Q', 'Y'), used for feature and label generation
 
 **Returns:**
-- `tuple[pd.DataFrame, pd.Series]`: (features, labels). features has date index with columns as factor names; labels are excess returns with the same index
+- `tuple[pd.DataFrame, pd.Series]`: (features, labels). features has a MultiIndex `['datetime', 'instrument']` with factor names as columns; labels are excess returns with the same index
 
 **Example:**
 ```python
@@ -108,8 +108,8 @@ calc_factor_return(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with date index, factor names as columns, and boolean values
-- `labels` (pd.Series, required): Label Series with date index and excess returns as values
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']`, factor names as columns, and boolean values
+- `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
 - `pd.DataFrame`: Equal-weight portfolio period returns indexed by date with factor names as columns, starting from the first non-empty row
@@ -143,7 +143,7 @@ cumulative_return.plot(figsize=(12, 6))
 
 ### calc_ic
 
-Calculate the correlation coefficient (IC) between features and labels. Optionally rank features first for Rank IC. Outputs starting from the first non-empty row.
+Calculate the per-date correlation coefficient (IC) between features and labels. `rank=False` computes Pearson IC and starts output at the first date where every factor that has any IC has one; `rank=True` computes Spearman Rank IC (features and labels both ranked per date) and returns every date, including leading NaN rows.
 
 **Signature:**
 ```python
@@ -155,12 +155,12 @@ calc_ic(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex (date, stock_id) and factor names as columns
-- `labels` (pd.Series, required): Label Series with MultiIndex (date, stock_id)
-- `rank` (bool, optional, default=False): Whether to rank features first for calculating Rank IC
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']` and factor names as columns
+- `labels` (pd.Series, required): Label Series with the same MultiIndex
+- `rank` (bool, optional, default=False): `True` computes Spearman Rank IC; `False` computes Pearson IC
 
 **Returns:**
-- `pd.DataFrame`: IC values for each date and factor, starting from the first non-empty row
+- `pd.DataFrame`: IC values for each date and factor. With `rank=False`, starts at the first date where every factor that has any IC has one; with `rank=True`, includes leading NaN rows
 
 **Example:**
 ```python
@@ -171,7 +171,7 @@ price = data.get('etl:adj_close')
 marketcap = data.get('etl:market_value')
 revenue = data.get('monthly_revenue:當月營收')
 
-# Generate features and labels (MultiIndex: date, stock_id)
+# Generate features and labels (MultiIndex: datetime, instrument)
 features, labels = generate_features_and_labels({
     'marketcap': marketcap.rank(pct=True, axis=1) < 0.3,
     'revenue': (revenue.average(3) / revenue.average(12)).rank(pct=True, axis=1) < 0.3,
@@ -290,8 +290,8 @@ calc_shapley_values(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with date index, factor names as columns, and boolean values (True indicates selected)
-- `labels` (pd.Series, required): Label Series with MultiIndex ('datetime', 'stock_id') and excess returns as values
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']`, factor names as columns, and boolean values (True indicates selected)
+- `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
 - `pd.DataFrame`: Daily Shapley values for each factor. Indexed by date with factor names as columns
@@ -367,7 +367,7 @@ print(centrality_df.head())
 
 ### calc_regression_stats
 
-Perform linear regression on each time series in a DataFrame and return statistics (slope, p-value, R², tail estimate, and trend classification). Uses vectorized implementation without SciPy dependency.
+Perform linear regression on each time series in a DataFrame and return statistics (slope, p-value, R², tail estimate, and trend classification). Fits each column with vectorized least squares; p-values come from `scipy.stats` (SciPy is installed with finlab).
 
 **Signature:**
 ```python
@@ -529,6 +529,7 @@ from finlab.tools.factor_analysis import (
     generate_features_and_labels,
     calc_factor_return
 )
+import matplotlib.pyplot as plt
 import pandas as pd
 
 # Define multiple factors

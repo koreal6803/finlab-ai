@@ -588,7 +588,7 @@ def ls_order_position(short=5, mid=10, long=30):
 
 # Margin Maintenance Ratio
 def margin_position(short_par=5, long_par=30):
-    融資券總餘額 = data.get("margin_balance:融資券總餘額").fillna(method="ffill")
+    融資券總餘額 = data.get("margin_balance:融資券總餘額").ffill()
     融資今日餘額 = data.get("margin_transactions:融資今日餘額")
     close = data.get("price:收盤價")
     融資總餘額 = 融資券總餘額[["上市融資交易金額", "上櫃融資交易金額"]].sum(axis=1)
@@ -765,6 +765,7 @@ Advanced RSI-based strategy with multiple timeframes.
 ```python
 from finlab import data
 from finlab.backtest import sim
+import numpy as np
 import pandas as pd
 from finlab import dataframe
 
@@ -772,8 +773,8 @@ close = data.get("price:收盤價")
 roe = data.get("fundamental_features:ROE稅後")
 
 rsi1 = data.indicator("RSI", timeperiod=20)
-rsi2 = data.indicator("RSI", freq="D", timeperiod=60)
-rsi3 = data.indicator("RSI", freq="D", timeperiod=120)
+rsi2 = data.indicator("RSI", resample="D", timeperiod=60)
+rsi3 = data.indicator("RSI", resample="D", timeperiod=120)
 
 buy = (rsi3 > 55) & (rsi1 / rsi1.shift(3) > 1.02) & (roe > 0) & \
       dataframe.FinlabDataFrame(rsi1 > 75).sustain(3) & (rsi2 < 75)
@@ -924,7 +925,7 @@ report   = sim(position, resample='M')
 ```python
 from finlab import data
 
-# Do NOT use us_ratios:pe — it is a short-history 2026-only snapshot table.
+# Do NOT use us_ratios:price_to_earnings_ratio — it is a short-history 2026-only snapshot table.
 # Compute trailing-twelve-months P/E from raw fundamentals instead.
 data.set_market('us')
 price = data.get('us_price:adj_close')
