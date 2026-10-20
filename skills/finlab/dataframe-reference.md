@@ -459,7 +459,7 @@ hold_until(
 - `nstocks_limit` (int, optional): Maximum number of stocks to hold simultaneously
 - `stop_loss` (float, optional, default=-np.inf): Stop loss threshold (e.g., 0.1 = exit if down 10%)
 - `take_profit` (float, optional, default=np.inf): Take profit threshold (e.g., 0.2 = exit if up 20%)
-- `trail_stop` (float, optional): Giveback from peak return, measured relative to the entry price (not a percentage fall from the peak). An armed trailing stop exits the long position when `(peak_price - price) / entry_price > abs(trail_stop)`, where `price` is the adjusted `trade_at` price and `peak_price` is its highest value since entry. Example: entry 100, peak 150, `trail_stop=0.15` exits below 135, not below 127.5
+- `trail_stop` (float, optional): Once armed, exits when `(peak_price - price) / entry_price > abs(trail_stop)`, where `price` is the adjusted `trade_at` price and `peak_price` its high since entry (e.g., entry 100, peak 150, 0.15 = exit below 135, not 127.5)
 - `trail_stop_activation` (float, optional, *v2.0.12*): Unrealized-gain threshold the position must reach before `trail_stop` arms. Until this gain is hit, only the static `stop_loss` applies. Useful when you want winners to clear entry noise (e.g. +10 %) before the trail starts ratcheting
 - `trade_at` (str, optional, default='close'): Price reference for stop/take profit ('close' or 'open')
 - `rank` (pd.DataFrame, optional): Ranking DataFrame for prioritizing entries when limit is reached (higher = priority)
