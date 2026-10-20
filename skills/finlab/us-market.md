@@ -90,7 +90,7 @@ Quarterly tables use a string index of the form `"<YYYY>-US-Q<N>"`, e.g. `"2024-
 
 `us_index_constituents:sp500` and `us_index_constituents:nasdaq100` are daily boolean membership tables starting **2015-01-02** (True = index member that day), so they cover the whole `us_price` history. `data.us_universe(index=...)` does **not** use that history: it takes the table's **latest** row and applies today's members to every historical date, which builds survivorship and look-ahead bias into any backtest run inside it. For historical membership, mask with `us_index_constituents:*` (§5.2).
 
-The S&P 500 history before 2022-11-08 is rebuilt from archived Wikipedia snapshots carried forward between observations (median gap 8 days, max 36), so a change can show up a few weeks after its effective date; from 2022-11-08 it is a daily snapshot. NASDAQ 100 dates follow recorded index changes. The mask removes survivorship bias but is not an exact effective-date record.
+The S&P 500 history before 2022-11-08 is rebuilt from archived Wikipedia snapshots carried forward between observations (median gap 8 days, max 36), so a membership change can be dated up to a few weeks off its effective date; from 2022-11-08 it is a daily snapshot. NASDAQ 100 dates follow recorded index changes. The mask removes survivorship bias but is not an exact effective-date record.
 
 ### 1.5 `us_earnings_surprises` sparsity
 
