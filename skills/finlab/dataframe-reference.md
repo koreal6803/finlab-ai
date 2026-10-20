@@ -460,7 +460,7 @@ hold_until(
 - `stop_loss` (float, optional, default=-np.inf): Stop loss threshold (e.g., 0.1 = exit if down 10%)
 - `take_profit` (float, optional, default=np.inf): Take profit threshold (e.g., 0.2 = exit if up 20%)
 - `trail_stop` (float, optional, default=np.inf (off)): Once armed, exits when `(peak_price - price) / entry_price > abs(trail_stop)`, where `price` is the adjusted `trade_at` price and `peak_price` its high since entry (e.g., entry 100, peak 150, 0.15 = exit below 135, not 127.5)
-- `trail_stop_activation` (float, optional, default=0, *v2.0.12*): Gain required before `trail_stop` arms (e.g. 0.1 = +10%); `0`/`None` arm immediately. Activation rules: [backtesting-reference.md](backtesting-reference.md#trail_stop_activation-v2012)
+- `trail_stop_activation` (float, optional, default=0, *v2.0.12*): Gain required before `trail_stop` arms (e.g. 0.1 = +10%); `0`/`None` arm immediately. Before activation, `stop_loss` and `take_profit` still apply; only `trail_stop` waits
 - `trade_at` (str, optional, default='close'): Price reference for stop/take profit ('close' or 'open')
 - `rank` (pd.DataFrame, optional): Ranking DataFrame for prioritizing entries when limit is reached (higher = priority)
 
@@ -739,7 +739,8 @@ factor = pb.cs.winsorize(0.01, 0.99).cs.zscore()
 
 # Sort into 5 equal-size buckets per day
 buckets = pb.cs.bucket(5)
-cheapest = buckets == 1  # lowest-P/B bucket
+cheapest = buckets == 1        # bucket 1 = lowest P/B
+most_expensive = buckets == 5  # bucket 5 = highest P/B
 
 # Demean to remove daily market average
 factor_neutral = pb.cs.demean()
