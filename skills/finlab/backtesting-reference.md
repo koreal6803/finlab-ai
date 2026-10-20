@@ -138,7 +138,7 @@ sim(
 #### upload
 - **Type:** `Union[bool, None]`
 - **Default:** `None`
-- **Description:** Whether to upload the strategy performance report after simulation. With `None` (default), the report is uploaded only when the environment variable `FINLAB_STRATEGY_NAME` or `FINLAB_FORCED_STRATEGY_NAME` is set (FinLab Studio and cloud schedules set them), so a plain local run does not upload. `upload=True` forces an upload; `upload=False` never uploads.
+- **Description:** Whether to upload the strategy performance report after simulation. With `None` (default, *v2.0.24*), the report is uploaded only in cloud-scheduled runs, which set the environment variable `FINLAB_FORCED_STRATEGY_NAME`; FinLab Studio, local scripts, Jupyter and Colab do not upload. To upload from those environments, pass `upload=True` or call `report.upload()` afterwards; `upload=False` never uploads.
 
 #### end_date *(v2.0.22)*
 - **Type:** `Union[str, datetime.date, pd.Timestamp, None]` (keyword-only)
@@ -182,7 +182,7 @@ stats = report.get_stats()
 
 # Dictionary keys (note: different names than metrics methods!)
 print(f"Annual Return: {stats['cagr']:.2%}")
-print(f"Sharpe Ratio: {stats['monthly_sharpe']:.2f}")
+print(f"Sharpe Ratio: {stats['daily_sharpe']:.2f}")
 print(f"Max Drawdown: {stats['max_drawdown']:.2%}")
 print(f"Win Ratio: {stats['win_ratio']:.2%}")
 print(f"Total Return: {stats['total_return']:.2%}")
@@ -190,10 +190,10 @@ print(f"Total Return: {stats['total_return']:.2%}")
 
 **Available keys in `get_stats()`:**
 - `cagr` - Compound Annual Growth Rate
-- `daily_sharpe` - Daily Sharpe ratio
+- `daily_sharpe` - Daily Sharpe ratio (same value as `metrics.sharpe_ratio()` and `get_metrics()['ratio']['sharpeRatio']`)
 - `monthly_sharpe` - Monthly Sharpe ratio
 - `max_drawdown` - Maximum drawdown (negative value)
-- `win_ratio` - Win rate of trades
+- `win_ratio` - Win rate of closed trades only (`metrics.win_rate()` also counts open trades)
 - `total_return` - Total cumulative return
 - `start` - Backtest start date (string)
 - `end` - Backtest end date (string)
@@ -229,14 +229,14 @@ report.to_html(path: str, title: str | None = None) -> None
 
 **Parameters:**
 - `path` (str, required): output file path; pass a `.html` filename, the file is written in place
-- `title` (str, optional, *v2.0.12*): browser-tab title for the exported page. Defaults to the strategy name. Set this when delivering several reports so the user can tell tabs apart at a glance. The FinLab favicon is bundled into the file automatically (also v2.0.12).
+- `title` (str, optional, *v2.0.12*): browser-tab title for the exported page. Defaults to `FinLab Report`; the `sim(name=...)` strategy name is not used. Set this when delivering several reports so the user can tell tabs apart at a glance. The FinLab favicon is bundled into the file automatically (also v2.0.12).
 
 **What the file contains:** a single self-contained HTML page (open in any browser, no server) with
 - equity curve and benchmark overlay
 - drawdown chart and drawdown table
 - monthly / annual return heatmap
 - full metric panel (CAGR, Sharpe, Sortino, Calmar, MDD, win rate, MAE/MFE, beta/alpha, capacity)
-- trade-by-trade table — entry/exit dates, prices, position size, return, holding days
+- trade-by-trade table of the most recent 500 trades — entry/exit dates, prices, position size, return, holding days
 
 **When to use:** after any `sim()` call the user will review (batch-run exception: see SKILL.md Step 4.5). It is the file the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
 
@@ -258,7 +258,7 @@ sim(pos_b, name="Value").to_html("value.html", title="Value")
 # Display interactive report inside Jupyter / IPython only
 report.display()
 
-# Get trade details as a DataFrame (same data the HTML embeds)
+# Get every trade as a DataFrame (the HTML embeds only the most recent 500)
 trades_df = report.get_trades()
 
 # Persist the full Report object (for later re-rendering / programmatic access)
@@ -270,6 +270,7 @@ report.run_analysis("Drawdown")
 report.run_analysis("MaeMfe")
 
 # ASCII fallback for terminals without a browser — supplement, not replacement
+# Requires the terminal extra: pip install 'finlab[terminal]'
 report.to_terminal()
 report.to_terminal(height=8, width=60, show_benchmark=False)
 ```
@@ -279,9 +280,9 @@ report.to_terminal(height=8, width=60, show_benchmark=False)
 | Desired Metric | `report.metrics.X()` | `report.get_stats()['X']` |
 |----------------|----------------------|---------------------------|
 | Annual Return | `annual_return()` | `'cagr'` |
-| Sharpe Ratio | `sharpe_ratio()` | `'monthly_sharpe'` |
+| Sharpe Ratio | `sharpe_ratio()` | `'daily_sharpe'` |
 | Max Drawdown | `max_drawdown()` | `'max_drawdown'` |
-| Win Rate | `win_rate()` | `'win_ratio'` |
+| Win Rate | `win_rate()` (includes open trades) | `'win_ratio'` (closed trades only; not equal) |
 | Total Return | - | `'total_return'` |
 
 ---
@@ -465,7 +466,7 @@ report.to_html("report.html")  # the file is what the user opens
 from finlab.exceptions import (
     FinlabError,      # root — catch-all for finlab-specific errors
     DataError,        # data fetch / parsing / schema
-    BacktestError,    # sim() validation and execution
+    BacktestError,    # defined but not raised: sim() raises ValueError / TypeError
     BrokerError,      # broker account / order submission
     AuthError,        # login / token refresh
     PortfolioError,   # PortfolioSyncManager sync failures
@@ -474,13 +475,13 @@ from finlab.exceptions import (
 
 try:
     report = backtest.sim(position, resample='M')
-except BacktestError as e:
-    logger.warning(f"backtest failed: {e}")
 except DataError:
     logger.error("data layer failure — abort run")
+except (ValueError, TypeError) as e:
+    logger.warning(f"backtest failed: {e}")
 ```
 
-Internally `sim()` was refactored (v2.0.0) into five independently testable stages — `_validate_sim_inputs`, `_prepare_price_data`, `_normalize_position`, `_execute_simulation`, `_build_sim_report` — so errors now originate from a narrower context, which is why most call sites raise a specific `BacktestError` subclass instead of a generic exception.
+Catch `DataError` first: some download errors subclass both `DataError` and `ValueError`.
 
 ---
 
