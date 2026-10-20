@@ -74,18 +74,18 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
 ## Market Support
 
-FinLab supports TW (default), US, KR, JP, HK, plus Taiwan emerging (`rotc`) and Taiwan convertible bonds (`tw_cb`). Pick the market once per session with `data.set_market(<code>)`; generic dataset names like `price:收盤價` or `monthly_revenue:當月營收` resolve to the active market's tables, so strategy code is written the same way across markets. `data.set_market('rotc')` *(v2.0.9)* enables 興櫃 (TW emerging) — use it when you need pre-listing price action or revenue factors that don't exist in the main TSE/OTC catalog.
+FinLab supports TW (default), US, KR, JP, HK, plus Taiwan emerging (`rotc`) and Taiwan convertible bonds (`tw_cb`). Pick the market once per session with `data.set_market(<code>)`; a dataset name without a market prefix resolves to the active market's table of the same name (`price:close` → `us_price:close` under `us`). If the active market has no table of that name, `data.get()` **silently returns the TW table**: Chinese keys such as `price:收盤價` or `monthly_revenue:當月營收` only exist for TW (and `rotc`), so after `data.set_market('us')`, `data.get('price:收盤價')` returns Taiwan prices without an error. Outside TW, use English keys (`price:close`) or the prefixed name (`us_price:adj_close`). `data.set_market('rotc')` *(v2.0.9)* enables 興櫃 (TW emerging) — use it when you need pre-listing price action or revenue factors that don't exist in the main TSE/OTC catalog. `tw_cb` is not a `set_market` code (`data.set_market('tw_cb')` raises `ValueError`): read `cb_price:*` and pass `sim(position, market=TWCBMarket())` (`from finlab.markets.tw_cb import TWCBMarket`).
 
 The rest of this file plus [dataframe-reference.md](dataframe-reference.md), [backtesting-reference.md](backtesting-reference.md), [best-practices.md](best-practices.md), [factor-analysis-reference.md](factor-analysis-reference.md), and [machine-learning-reference.md](machine-learning-reference.md) are **market-agnostic** — the APIs behave the same across markets.
 
 For US-market work — whether single-name equities (`data.set_market('us')`) or ETFs/funds (`data.set_market('us_fund')`) — **read [us-market.md](us-market.md) first**. Queries that should trigger it include: US equity, S&P 500, NASDAQ 100, 美股, SPY / QQQ, sector SPDRs, leveraged / inverse ETFs, ETF rotation, `us_price:*`, `us_fund_price:*`, `data.us_universe(...)`, or `us_income_statement:*` / `us_cash_flow:*` / `us_balance_sheet:*`. It documents:
 
 - Which US data tables are safe for backtesting versus current-snapshot-only (analyst consensus, ratios, DCF are live-only — do not use them historically)
-- Filing-date-aligned quarterly fundamentals (`key_date == filing_date`) — no `.shift()` workaround needed
+- Quarterly fundamentals aligned on `key_date` (the SEC filing date, or period end + filing deadline when FMP only has a placeholder `filing_date`) — no `.shift()` workaround needed; do not use the raw `filing_date` column as the publication date
 - `Report` API names on US (`creturn` / `daily_creturn` / `get_stats()`; no `get_equity()`)
 - US backtest defaults for both markets: `USMarket` (`fee_ratio=0`, `tax_ratio=0`, `trade_at_price='close'`) and `USFundMarket` for ETF/fund backtests
 - How `data.set_market(...)` is the session-scope switch (there is no `market=` kwarg on `data.get()`)
-- Dollar-volume-top-N universe construction (works back to 2016), S&P 500 / NASDAQ 100 membership via `data.us_universe(index='S&P 500' | 'NASDAQ 100')` with its 2022-11 history-start caveat, quality gates, and sector-exclusion rationale
+- Dollar-volume-top-N universe construction (works back to 2016), point-in-time S&P 500 / NASDAQ 100 membership via the daily `us_index_constituents:*` mask (2015-01-02 onward; `data.us_universe(index=...)` applies today's members to every date and is survivorship-biased), quality gates, and sector-exclusion rationale
 - Lookahead-bias checklist specific to US data (rolling-window universe filters, survivorship avoidance)
 - ETF / sector-rotation backtesting via `USFundMarket` and `us_fund_price:*`
 
@@ -142,7 +142,7 @@ print(report.metrics.max_drawdown())
 # Option B: Using get_stats() dictionary (different key names!)
 stats = report.get_stats()
 print(f"CAGR: {stats['cagr']:.2%}")
-print(f"Sharpe: {stats['monthly_sharpe']:.2f}")
+print(f"Sharpe: {stats['daily_sharpe']:.2f}")  # = metrics.sharpe_ratio(); 'monthly_sharpe' is a different number
 print(f"MDD: {stats['max_drawdown']:.2%}")
 
 # Benchmark stats (finlab >= 2.0.17): same keys via report.get_benchmark_stats()
@@ -271,7 +271,7 @@ print(f"Max Drawdown: {report.metrics.max_drawdown():.2%}")
 # Option B: Using get_stats() dictionary (note: different key names!)
 stats = report.get_stats()
 print(f"CAGR: {stats['cagr']:.2%}")           # 'cagr' not 'annual_return'
-print(f"Sharpe: {stats['monthly_sharpe']:.2f}") # 'monthly_sharpe' not 'sharpe_ratio'
+print(f"Sharpe: {stats['daily_sharpe']:.2f}")   # 'daily_sharpe' = metrics.sharpe_ratio(), not 'monthly_sharpe'
 print(f"MDD: {stats['max_drawdown']:.2%}")     # same name
 
 # Benchmark comparison (finlab >= 2.0.17): same ffn keys, computed on the
@@ -433,4 +433,4 @@ Direct users to open an issue on GitHub: https://github.com/koreal6803/finlab-ai
 
 - Some data columns use Chinese names — this is expected, use them as-is in `data.get()` calls
 - Data frequency varies: daily (price), monthly (revenue), quarterly (financial statements)
-- `sim()` defaults to `upload=None`: local runs do not upload; FinLab Studio / cloud schedules (which set `FINLAB_STRATEGY_NAME` / `FINLAB_FORCED_STRATEGY_NAME`) do. Pass `upload=False` to guarantee no upload, `upload=True` to force one
+- `sim()` defaults to `upload=None` *(v2.0.24)*: only cloud-scheduled runs (which set `FINLAB_FORCED_STRATEGY_NAME`) upload; FinLab Studio, local, Jupyter and Colab runs do not. Pass `upload=True` (or call `report.upload()` afterwards) to upload, `upload=False` to guarantee no upload

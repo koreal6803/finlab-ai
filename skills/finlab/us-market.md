@@ -6,7 +6,7 @@ Load this file whenever a strategy targets US markets — both single-stock (`US
 
 - `data.set_market('us')` or `data.set_market('us_fund')`
 - `data.get('us_price:...')`, `data.get('us_fund_price:...')`, or any `us_*` / `us_fund_*` table
-- `data.us_universe(index='S&P 500' | 'NASDAQ 100')`
+- `data.us_universe(index='S&P 500' | 'NASDAQ 100')` or `us_index_constituents:*`
 - A user question about S&P 500 / NASDAQ 100 / SPY / QQQ / sector ETFs / leveraged ETFs / US equity backtests / 美股
 
 It covers the stable design facts of FinLab's US-market support: what data exists, how it aligns, what the defaults are, and how to bound the universe defensibly — for both single-name equity strategies and ETF / sector-rotation strategies.
@@ -23,25 +23,25 @@ These tables carry enough history and point-in-time discipline to be used in a b
 
 | Table                              | Frequency  | History            | Coverage        | Alignment field       | Market            |
 |------------------------------------|------------|--------------------|-----------------|------------------------|-------------------|
-| `us_price:*` (adj_close, volume…)  | Daily      | 2016-01 → present  | ~8,000 tickers  | DatetimeIndex          | `us` (equities)   |
+| `us_price:*` (adj_close, volume…)  | Daily      | 2016-01 → present  | ~10,600 tickers | DatetimeIndex          | `us` (equities)   |
 | `us_fund_price:*` (adj_close, volume…) | Daily  | 2016-01 → present  | ~9,300 ETFs/funds | DatetimeIndex        | `us_fund` (ETFs)  |
-| `us_income_statement:*`            | Quarterly  | 2015-Q1 → present  | ~5,000 tickers  | `key_date == filing_date` | `us`          |
-| `us_balance_sheet:*`               | Quarterly  | 2015-Q1 → present  | ~5,000 tickers  | `key_date == filing_date` | `us`          |
-| `us_cash_flow:*`                   | Quarterly  | 2015-Q1 → present  | ~5,000 tickers  | `key_date == filing_date` | `us`          |
+| `us_income_statement:*`            | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
+| `us_balance_sheet:*`               | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
+| `us_cash_flow:*`                   | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
 | `us_earnings_surprises:*`          | Event-based| 2015-01 → 2025-12  | ~12,000 tickers | DatetimeIndex          | `us`              |
-| `us_index_constituents:sp500`      | Daily      | 2022-11 → present  | ~503 tickers    | DatetimeIndex          | `us`              |
-| `us_index_constituents:nasdaq100`  | Daily      | 2022-11 → present  | 100 tickers     | DatetimeIndex          | `us`              |
+| `us_index_constituents:sp500`      | Daily      | 2015-01 → present  | ~503 members/day | DatetimeIndex          | `us`              |
+| `us_index_constituents:nasdaq100`  | Daily      | 2015-01 → present  | ~101 members/day | DatetimeIndex          | `us`              |
 | `world_index:adj_close`            | Daily      | 2015-07 → present  | 35 indices      | DatetimeIndex          | market-agnostic   |
 
 `us_fund_price:*` covers SPY, QQQ, sector SPDRs (XLK / XLF / XLE / …), country ETFs, leveraged/inverse ETFs, and mutual funds. Use it for sector-rotation, ETF momentum, or leveraged-ETF backtests — you must first call `data.set_market('us_fund')` because ETF tickers are not present in `us_price`. See §4.2.
 
-Balance-sheet / cash-flow fields with confirmed coverage (~45 quarters, ~8,600 tickers):
+Balance-sheet / cash-flow fields with confirmed coverage (2015-Q1 onward, ~10,000 tickers):
 `total_debt`, `total_stockholders_equity`, `net_debt`, `long_term_debt`, `short_term_debt`,
 `cash_and_short_term_investments`, `retained_earnings`, `total_liabilities`,
-`capital_expenditure`, `stock_based_compensation`, `acquisitions_net`.
+`capital_expenditure`, `stock_based_compensation`, `acquisitions_net`,
+`net_dividends_paid`, `common_stock_issuance`, `net_debt_issuance`.
 
-Fields **not** populated (check before designing a factor):
-`dividends_paid`, `debt_repayment`, `common_stock_issued`, `cash_and_equivalents`.
+Field names follow FMP's schema, so guessed names raise `DatasetNotFoundError`: there is no `us_cash_flow:dividends_paid` (use `net_dividends_paid` or `common_dividends_paid`), `debt_repayment` (use `net_debt_issuance`, net of repayments), `common_stock_issued` (use `common_stock_issuance`), or `cash_and_equivalents` (use `us_balance_sheet:cash_and_cash_equivalents`).
 
 ### 1.2 Current-snapshot-only tables (NOT safe for backtest)
 
@@ -59,7 +59,7 @@ These tables are short-history/current-snapshot data. Firestore catalog currentl
 
 The same FMP snapshot-table families are also short-history in other overseas equity markets: `hk_*`, `jp_*`, `kr_*`, and `uk_*` versions of `ratios`, `key_metrics`, `stock_rating`, `dcf`, and `analyst_consensus`. Treat them as live-screening data, not historical backtest factors.
 
-For a clean US common-stock universe, use `common = data.get('etl:us_common_stock_filter')` then restrict columns with `df = df[df.columns.intersection(common.columns)]`; this excludes ETFs/funds/ADRs/notes/preferreds/warrants/units/rights via `us_company_profile.security_type`.
+For a clean US common-stock universe, use `common = data.get('etl:us_common_stock_filter')` then restrict columns with `df = df[df.columns.intersection(common.columns)]`; this excludes ETFs/funds/ADRs/notes/preferreds/warrants/units/rights via `us_company_profile.security_type`. Membership comes from the **current** `us_company_profile` snapshot, so stocks delisted since are excluded: a long backtest restricted to this filter has survivorship bias (§6 #5).
 
 If you need a ratio (P/E, P/B, ROE, debt ratios), **compute it from the raw quarterly statements**. Example:
 ```python
@@ -81,7 +81,7 @@ Quarterly tables use a string index of the form `"<YYYY>-US-Q<N>"`, e.g. `"2024-
 
 ### 1.4 Index-constituent history caveat
 
-`data.us_universe(index='S&P 500')` and `data.us_universe(index='NASDAQ 100')` expose point-in-time membership, but the membership history only begins **2022-11-08**. Backtests that start before that date cannot use point-in-time index membership and must fall back to a dollar-volume or market-cap proxy (see §5.1). For long backtests (2016 onward), this is the single biggest constraint on US universe design.
+`us_index_constituents:sp500` and `us_index_constituents:nasdaq100` are daily boolean membership tables starting **2015-01-02** (True = index member that day), so they cover the whole `us_price` history. `data.us_universe(index=...)` does **not** use that history: it takes the table's **latest** row and applies today's members to every historical date, which builds survivorship and look-ahead bias into any backtest run inside it. For historical index membership, mask with the dated table (§5.2).
 
 ### 1.5 `us_earnings_surprises` sparsity
 
@@ -91,7 +91,12 @@ Density is ~0.64% (262K non-null cells across 3,415 dates × 12,077 tickers). Po
 
 ## 2. Quarterly Alignment (stable, non-obvious)
 
-FinLab aligns US quarterly fundamentals using `key_date == filing_date` (SEC 10-Q filing date), **not** `original_date` (fiscal quarter end). This is the correct, lookahead-safe behaviour and does not require a `.shift()` workaround.
+FinLab aligns US quarterly fundamentals on `key_date`, **not** `original_date` (fiscal quarter end). This is the correct, lookahead-safe behaviour and does not require a `.shift()` workaround.
+
+- When FMP supplies the real SEC filing date, `key_date == filing_date`.
+- About 23% of (quarter, stock) rows only carry a placeholder `filing_date` equal to the period end (or the day after). For those, `key_date` = period end + filing deadline: 45 days for a US company's 10-Q, 90 days for its 10-K, 120 days for filers without a US deadline (foreign issuers, funds).
+
+So do not use the raw `filing_date` column as the publication date (for example in an event study): on placeholder rows it is the period end, up to 120 days before the data was public. Use `data.get('us_income_statement:key_date')` instead.
 
 Worked example — AAPL 2024-US-Q3:
 
@@ -99,11 +104,11 @@ Worked example — AAPL 2024-US-Q3:
 |-----------------|--------------|----------------------------------------------|
 | `original_date` | 2024-09-28   | Fiscal quarter end                           |
 | `filing_date`   | 2024-11-01   | When data became publicly available via SEC  |
-| `key_date`      | 2024-11-01   | Used for daily alignment (= `filing_date`)   |
+| `key_date`      | 2024-11-01   | Used for daily alignment (= real `filing_date`) |
 
 Revenue transitions from Q2 ($85.78B) to Q3 ($94.93B) exactly on 2024-11-01 on the daily grid. Any factor built from `us_income_statement:*`, `us_balance_sheet:*`, or `us_cash_flow:*` inherits this discipline automatically.
 
-**Implication**: Do not call `.shift()` on US quarterly DataFrames to "be safe." The shift is already applied via filing-date alignment, and adding another shift makes the signal trade one period late. Confirmed across all 6,067 US stocks tested.
+**Implication**: Do not call `.shift()` on US quarterly DataFrames to "be safe." The delay is already applied via `key_date` alignment, and adding another shift makes the signal trade one period late.
 
 ---
 
@@ -185,7 +190,7 @@ Do not mix the two markets in one `sim()` call: pick equities **or** ETFs. Run t
 
 A defensible US universe isolates stocks that are (a) tradeable at meaningful size, (b) priced above noise thresholds, and (c) free of data artefacts. FinLab gives you two starting points — index membership and dollar-volume ranking — and both need quality gates on top.
 
-### 5.1 Dollar-volume top-N (pre-2022 friendly)
+### 5.1 Dollar-volume top-N
 
 The most portable pattern. Rank stocks by rolling average dollar volume and keep the top-N. Works back to 2016 without needing index-membership history.
 
@@ -206,20 +211,26 @@ Why `min_periods=20`: allows freshly-listed stocks to enter the universe after ~
 
 Why top-100 rather than top-500: concentrates the strategy on names where (i) adjusted price series are clean, (ii) execution slippage is minimal, and (iii) idiosyncratic events are less likely to dominate returns. Widen if your factor explicitly targets small/mid caps.
 
-### 5.2 Index-constituent membership (post-2022 only)
+### 5.2 Index-constituent membership (2015 onward)
 
-When point-in-time membership matters (e.g., "S&P 500 only" mandate), use `data.us_universe(index=...)`. The correct index labels are the display strings `'S&P 500'` and `'NASDAQ 100'` (with spaces and ampersand), not `'SP500'` / `'NASDAQ100'`.
+When point-in-time membership matters (e.g., "S&P 500 only" mandate), mask the factor with the daily `us_index_constituents:*` table so each date ranks only that day's members:
 
 ```python
 from finlab import data
+from finlab.backtest import sim
 
 data.set_market('us')
-with data.us_universe(index='S&P 500'):
-    close = data.get('us_price:adj_close')
-    # downstream factor logic operates within S&P 500 members only
+close    = data.get('us_price:adj_close')
+in_sp500 = data.get('us_index_constituents:sp500')   # daily bool, 2015-01-02 onward
+
+momentum = close / close.shift(126) - 1
+position = momentum[in_sp500].is_largest(20)          # rank only that day's S&P 500 members
+report   = sim(position, resample='M')
 ```
 
-History starts 2022-11-08. For backtests longer than ~3.4 years, blend with §5.1 (dollar-volume top-N before 2022-11, index membership after).
+Use `us_index_constituents:nasdaq100` for NASDAQ 100. Tickers are matched exactly, so a renamed ticker or one missing from `us_price` drops out.
+
+`data.us_universe(index=...)` (accepts `'S&P 500'`, `'SP500'`, `'SPX'`, `'NASDAQ 100'`, `'NASDAQ100'`, `'NDX'`) is **not** point-in-time: it applies today's member list to every date. Use it only to screen current members, never to define a backtest universe.
 
 ### 5.3 Quality gates
 
@@ -229,7 +240,7 @@ Stack these on top of §5.1 or §5.2:
 |------------------------------|-------------------------|----------------------------------------------------------------------|
 | Minimum price                | `close > 5` (or `> 10`) | Penny stocks have idiosyncratic gaps, wide spreads, and are often untradeable at size. $5 is a widely-accepted floor; raise to $10 if your factor is sensitive to microstructure. |
 | Minimum rolling dollar volume| `> $5M / day` (20-day avg) | Ensures you can enter and exit your position size without meaningful slippage. Loosen for small-cap strategies; tighten if holding period is short. |
-| Exchange filter              | NYSE / NASDAQ only      | Excludes OTC / pink-sheet listings that have thin, unreliable prints. `us_company_profile:exchange`. |
+| Exchange filter              | NYSE / NASDAQ only      | Excludes OTC / pink-sheet listings that have thin, unreliable prints. `exchange` column of `data.get('us_company_profile')` (current snapshot). |
 | ETF / fund exclusion         | `is_etf == False & is_fund == False` | Under `data.set_market('us')` you want single-name equities only — exclude ETFs/funds here. For ETF or sector-rotation strategies, do the opposite: switch to `data.set_market('us_fund')` and trade from `us_fund_price:*` (see §4.2). |
 
 ### 5.4 Sector filters (methodology, not a rule)
@@ -244,11 +255,11 @@ Sector exclusion is a **factor-specific** decision, not a universal recommendati
 | Utilities           | Momentum, risk-on strategies                             | Low-beta, rate-sensitive; momentum premium is weak. Keep for defensive / quality strategies. |
 | Real Estate (REITs) | Accounting-quality factors                               | REIT capital structure (pass-through income, heavy leverage) makes standard quality ratios incomparable to operating companies. |
 
-The underlying principle: include a sector if and only if the factor you are computing has the same economic meaning there as elsewhere. `us_company_profile:sector` (static snapshot) is acceptable for this filter despite being point-in-time, because sector reclassifications are rare and typically do not affect the filter's outcome materially.
+The underlying principle: include a sector if and only if the factor you are computing has the same economic meaning there as elsewhere. The `sector` column of `data.get('us_company_profile')` (current snapshot) is acceptable for this filter despite not being point-in-time, because sector reclassifications are rare and typically do not affect the filter's outcome materially.
 
 ### 5.5 Data-quality gate for extreme moves
 
-Reverse-split artefacts, ticker reuse, and data-feed errors produce stocks with implausible daily returns (277 stocks have >5 days of 50%+ moves; one shows 9.5 × 10^15 % daily return). Filter them out with a **rolling** rather than full-history check to avoid lookahead:
+Reverse-split artefacts, ticker reuse, and data-feed errors produce stocks with implausible daily returns (hundreds of tickers have more than five days of ±50% moves; the largest single-day return exceeds 10^9 %). Filter them out with a **rolling** rather than full-history check to avoid lookahead:
 
 ```python
 rets          = close.pct_change()
@@ -270,8 +281,8 @@ Walk through before every US backtest:
 1. **Quarterly alignment.** Are fundamentals coming from `us_income_statement` / `us_balance_sheet` / `us_cash_flow`? Then filing-date alignment is already applied — **do not** `.shift()` on top. (§2)
 2. **Current-snapshot data.** Does any column in your factor come from `us_ratios`, `us_analyst_consensus`, `us_stock_rating`, `us_dcf`, `us_price_target_summary`, or `us_key_metrics`? Remove it — these tables are short-history 2026-only samples in the catalog. (§1.2)
 3. **Universe definition.** Does the universe use any whole-history computation (e.g., `series.max()`, `series.std()` over the full sample)? Rewrite with a rolling window that shifts one day. (§5.5)
-4. **Index membership history.** Does the universe rely on `data.us_universe(index='S&P 500' | 'NASDAQ 100')`? Start date must be ≥ 2022-11-08; earlier dates silently return empty membership. (§1.4)
-5. **Survivorship.** Does the universe require any field that only exists for currently-listed stocks (e.g., current market cap from `us_company_profile`)? Either drop the filter or replace with a time-series alternative that is safe to look at historically.
+4. **Index membership history.** Does the universe rely on `data.us_universe(index=...)`? It applies today's members to every date; replace it with the dated `us_index_constituents:*` mask. (§1.4, §5.2)
+5. **Survivorship.** Does the universe require any field that only exists for currently-listed stocks (e.g., `etl:us_common_stock_filter`, or current market cap from `us_company_profile`)? Either drop the filter or replace with a time-series alternative that is safe to look at historically.
 
 A quick sanity check: re-run your strategy after rolling the universe definition back by a year (i.e., treat the data as if it ended one year ago). If returns drop noticeably and the missing year was normal (not a crash), you almost certainly have a lookahead in universe construction.
 
