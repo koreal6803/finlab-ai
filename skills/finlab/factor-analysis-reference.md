@@ -279,7 +279,7 @@ metric_df = calc_metric(factor, adj_close, func=custom_metric)
 
 ### calc_shapley_values
 
-Score each boolean factor by the returns of the factor combinations that include it. For each date, it enumerates every non-empty factor combination, takes the mean excess return of the stocks that satisfy every factor in the combination (0 when none), and splits it evenly among the combination's factors; a factor's value is the sum of its shares over all combinations that include it. Despite the name, this is not the game-theoretic Shapley value: it does not measure the change in return from adding a factor, and the values do not sum to the return when all factors hold together. A higher value means the combinations containing the factor performed better. Computational complexity is O(2^n) where n is the number of factors.
+Score each boolean factor by the returns of the factor combinations that include it. For each date, it enumerates every non-empty factor combination, takes the mean excess return of the stocks that satisfy every factor in the combination (0 when none), and splits it evenly among the combination's factors; a factor's value is the sum of its shares over all combinations that include it. Despite the name, this is not the game-theoretic Shapley value: it does not measure the change in return from adding a factor, and the values do not sum to the return when all factors hold together.
 
 **Signature:**
 ```python
@@ -294,7 +294,7 @@ calc_shapley_values(
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
-- `pd.DataFrame`: Per-date contribution score for each factor. Indexed by date with factor names as columns
+- `pd.DataFrame`: Per-date score for each factor. Indexed by date with factor names as columns
 
 **Example:**
 ```python
@@ -321,7 +321,7 @@ print(shapley_df.mean())
 shapley_df.plot(figsize=(12, 6))
 ```
 
-**Note:** Due to computational complexity, this function is best used with a small number of factors (typically < 10).
+**Note:** Computational complexity is O(2^n) where n is the number of factors, so this function is best used with a small number of factors (typically < 10).
 
 ---
 
