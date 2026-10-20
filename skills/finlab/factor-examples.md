@@ -773,8 +773,8 @@ close = data.get("price:收盤價")
 roe = data.get("fundamental_features:ROE稅後")
 
 rsi1 = data.indicator("RSI", timeperiod=20)
-rsi2 = data.indicator("RSI", resample="D", timeperiod=60)
-rsi3 = data.indicator("RSI", resample="D", timeperiod=120)
+rsi2 = data.indicator("RSI", timeperiod=60)
+rsi3 = data.indicator("RSI", timeperiod=120)
 
 buy = (rsi3 > 55) & (rsi1 / rsi1.shift(3) > 1.02) & (roe > 0) & \
       dataframe.FinlabDataFrame(rsi1 > 75).sustain(3) & (rsi2 < 75)
@@ -925,7 +925,7 @@ report   = sim(position, resample='M')
 ```python
 from finlab import data
 
-# Do NOT use us_ratios:price_to_earnings_ratio — it is a short-history 2026-only snapshot table.
+# Do NOT use us_ratios:* — it is a short-history 2026-only snapshot table.
 # Compute trailing-twelve-months P/E from raw fundamentals instead.
 data.set_market('us')
 price = data.get('us_price:adj_close')

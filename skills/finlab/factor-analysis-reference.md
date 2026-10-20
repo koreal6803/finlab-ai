@@ -72,7 +72,7 @@ generate_features_and_labels(
 - `resample` (str, required): Resampling frequency string (e.g., 'M', 'Q', 'Y'), used for feature and label generation
 
 **Returns:**
-- `tuple[pd.DataFrame, pd.Series]`: (features, labels). features has a MultiIndex `['datetime', 'instrument']` with factor names as columns; labels are excess returns with the same index
+- `tuple[pd.DataFrame, pd.Series]`: (features, labels). features has a MultiIndex `('datetime', 'instrument')` with factor names as columns; labels are excess returns with the same index
 
 **Example:**
 ```python
@@ -108,7 +108,7 @@ calc_factor_return(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']`, factor names as columns, and boolean values
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `('datetime', 'instrument')`, factor names as columns, and boolean values
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
@@ -143,7 +143,7 @@ cumulative_return.plot(figsize=(12, 6))
 
 ### calc_ic
 
-Calculate the per-date correlation coefficient (IC) between features and labels. `rank=False` computes Pearson IC and starts output at the first date where every factor that has any IC has one; `rank=True` computes Spearman Rank IC (features and labels both ranked per date) and returns every date, including leading NaN rows.
+Calculate the per-date correlation coefficient (IC) between features and labels: Pearson by default, Spearman Rank IC with `rank=True`.
 
 **Signature:**
 ```python
@@ -155,9 +155,9 @@ calc_ic(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']` and factor names as columns
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `('datetime', 'instrument')` and factor names as columns
 - `labels` (pd.Series, required): Label Series with the same MultiIndex
-- `rank` (bool, optional, default=False): `True` computes Spearman Rank IC; `False` computes Pearson IC
+- `rank` (bool, optional, default=False): `True` ranks features and labels per date (Spearman Rank IC); `False` computes Pearson IC
 
 **Returns:**
 - `pd.DataFrame`: IC values for each date and factor. With `rank=False`, starts at the first date where every factor that has any IC has one; with `rank=True`, includes leading NaN rows
@@ -290,7 +290,7 @@ calc_shapley_values(
 ```
 
 **Parameters:**
-- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `['datetime', 'instrument']`, factor names as columns, and boolean values (True indicates selected)
+- `features` (pd.DataFrame, required): Feature DataFrame with MultiIndex `('datetime', 'instrument')`, factor names as columns, and boolean values (True indicates selected)
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
@@ -367,7 +367,7 @@ print(centrality_df.head())
 
 ### calc_regression_stats
 
-Perform linear regression on each time series in a DataFrame and return statistics (slope, p-value, R², tail estimate, and trend classification). Fits each column with vectorized least squares; p-values come from `scipy.stats` (SciPy is installed with finlab).
+Perform linear regression on each time series in a DataFrame and return statistics (slope, p-value, R², tail estimate, and trend classification). P-values use `scipy.stats`, which is installed with finlab.
 
 **Signature:**
 ```python
