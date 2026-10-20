@@ -4,7 +4,7 @@
 
 This reference covers the complete workflow for executing trades from backtest results to live orders. The process involves:
 
-1. **Position Calculation**: Convert backtest results to share quantities
+1. **Position Calculation**: Convert backtest results to lot (張) quantities
 2. **Broker Connection**: Configure and connect to your broker account
 3. **Order Execution**: Create, update, and manage orders via OrderExecutor
 4. **Realtime Sync** *(v2.0.0)*: Subscribe to live position/fill streams via `PositionStreamMixin`
@@ -17,13 +17,13 @@ This reference covers the complete workflow for executing trades from backtest r
 
 ```python
 from finlab.schemas import (
-    PositionEntry,   # one holding line: stock_id, quantity, order_condition, weight, ...
-    OrderEntry,      # one planned order: stock_id, quantity, action, price, ...
+    PositionEntry,   # one holding line: symbol, quantity, order_condition, weight
+    OrderEntry,      # one planned order: symbol, quantity, order_condition
     PortfolioData,   # full portfolio snapshot consumed by PortfolioSyncManager
 )
 ```
 
-**Deprecation note:** `stock_id` continues to work, but new typed APIs prefer `symbol` — see `docs/details/typed_data_interfaces.md` in the finlab repo. The migration policy is: `stock_id` remains accepted but aliased to `symbol` in dataclasses.
+**Deprecation note:** `symbol` is the canonical field — see `docs/details/typed_data_interfaces.md` in the finlab repo. `stock_id` is still accepted as an alias in dict payloads (`Position` entries, `from_dict()` input), but the dataclasses only have `symbol`: `entry.stock_id` raises `AttributeError`.
 
 ---
 
@@ -55,7 +55,7 @@ Position.from_report(
 - `odd_lot` (bool, default=False): Enable odd lot (零股) trading for smaller positions
 
 **Returns:**
-- `Position`: List of position dictionaries with stock_id, quantity, and order_condition
+- `Position`: Target holdings; each entry has symbol, quantity (in lots, see [Custom Position](#custom-position)), and order_condition
 
 **Example:**
 ```python
@@ -67,7 +67,10 @@ report = backtest.sim(position, resample="M")
 # Standard lot trading
 position = Position.from_report(report, fund=1000000)
 print(position)
-# [{'stock_id': '2330', 'quantity': 1, 'order_condition': <OrderCondition.CASH: 1>}]
+# symbol stock_id  quantity order_condition  weight
+#   2330     2330         1            CASH     0.1
+
+position.position  # the underlying list of entry dicts
 
 # Odd lot trading (smaller positions)
 position = Position.from_report(report, fund=1000000, odd_lot=True)
@@ -81,15 +84,17 @@ Create a position manually without backtest.
 
 **Signature:**
 ```python
-Position(holdings: dict) -> Position
+Position(stocks: dict[str, float]) -> Position
 ```
+
+`quantity` is in board lots (張), not shares. For Taiwan stocks one lot is 1,000 shares, so `{'2330': 1}` means 1,000 shares; the decimal part is odd-lot shares (`1.001` = 1 lot + 1 share). Negative quantities are short positions.
 
 **Example:**
 ```python
-# Simple position with share counts
+# 1 lot of 2330 and 2 lots of 1101
 position = Position({'2330': 1, '1101': 2})
 
-# Fractional shares (for odd lot)
+# Odd lots: 1 lot + 1 share of 1101
 position = Position({'2330': 1, '1101': 1.001})
 ```
 
@@ -274,13 +279,13 @@ from finlab.online.order_executor import OrderExecutor
 **Signature:**
 ```python
 OrderExecutor(
-    position: Position,
+    target_position: Position | dict,
     account: BrokerAccount
 ) -> OrderExecutor
 ```
 
 **Parameters:**
-- `position` (Position, required): Target position to execute
+- `target_position` (Position or dict, required): Target position to execute; a dict is converted with `Position(...)`
 - `account` (BrokerAccount, required): Connected broker account instance
 
 **Example:**
@@ -314,11 +319,14 @@ Create orders based on the target position.
 
 **Signature:**
 ```python
-create_orders(view_only: bool = False) -> None
+create_orders(view_only: bool = False, ...) -> list[dict]
 ```
 
 **Parameters:**
 - `view_only` (bool, default=False): If True, preview orders without execution
+
+**Returns:**
+- `list[dict]`: The orders placed (or, with `view_only=True`, the orders that would be placed)
 
 **Example:**
 ```python
@@ -358,12 +366,14 @@ executor.cancel_orders()
 **Signature:**
 ```python
 executor.generate_orders(
-    as_entries: bool = False,
-    quantity_type: str = 'shares'   # 'shares' | 'lots' | 'weight'
+    as_entries: bool | None = None,   # None → list[dict]
+    quantity_type: str = 'decimal'    # 'decimal' | 'float' | 'string'
 ) -> list[dict] | list[OrderEntry]
 
-executor.generate_order_entries() -> list[OrderEntry]  # typed convenience API
+executor.generate_order_entries(quantity_type: str = 'decimal') -> list[OrderEntry]  # typed convenience API
 ```
+
+`quantity` is in lots, like `Position`: positive = buy, negative = sell. `quantity_type` only sets the Python type of `quantity` in `OrderEntry` output; it does not change the unit, and it is ignored when `generate_orders()` returns dicts.
 
 **Example:**
 ```python
@@ -373,10 +383,7 @@ orders = executor.generate_orders()
 # Typed OrderEntry list — preferred for new code
 entries = executor.generate_order_entries()
 for e in entries:
-    print(f"{e.stock_id} {e.action} qty={e.quantity} @ {e.price}")
-
-# Use weight units (fraction of fund) instead of share counts
-w_orders = executor.generate_orders(quantity_type='weight')
+    print(f"{e.symbol} qty={e.quantity}")
 ```
 
 ---
@@ -394,7 +401,7 @@ print(acc.get_position())
 
 ## PortfolioSyncManager — Typed Data APIs
 
-*(v1.5.9)* In addition to `to_file()` / `from_file()` / `to_cloud()` / `from_cloud()`, `PortfolioSyncManager` now exposes typed data access:
+*(v1.5.9)* In addition to `to_path()` / `from_path()` / `to_local()` / `from_local()` / `to_cloud()` / `from_cloud()`, `PortfolioSyncManager` now exposes typed data access:
 
 ```python
 from finlab.portfolio import PortfolioSyncManager
@@ -424,18 +431,20 @@ from finlab.online.sinopac_account import SinopacAccount
 
 acc = SinopacAccount()
 
-# Subscribe to live position updates
 def on_update(update):
-    # update is a PositionUpdate dataclass; snapshot_key() deduplicates
-    print(update.snapshot_key(), update.symbol, update.quantity)
+    # update is a PositionUpdate: a snapshot of the whole account
+    # (account_id, broker, position, time, source='poll' | 'fill')
+    for e in update.position:  # update.position is a Position
+        print(update.source, e['symbol'], e['quantity'], e['order_condition'])
 
-acc.subscribe_positions()
+# Register the callback first: subscribe_positions() emits the initial snapshot immediately
 acc.on_position(on_update)
+acc.subscribe_positions()
 ```
 
 **Why hybrid:** Fill-event streams catch fills with sub-second latency but can miss events during disconnects; polling catches missed state but is slow. Combining both gives real-time responsiveness without state divergence risk.
 
-The `PositionUpdate` dataclass has a `snapshot_key()` method that you should use for deduplication in your consumer — duplicate messages are expected when fills and polling reconciliation arrive close together.
+An update is emitted only when the snapshot changes (`PositionUpdate.snapshot_key()` is compared internally), so unchanged polls do not call your callback.
 
 ---
 
