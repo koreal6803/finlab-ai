@@ -279,7 +279,7 @@ metric_df = calc_metric(factor, adj_close, func=custom_metric)
 
 ### calc_shapley_values
 
-Calculate Shapley values for each factor to measure marginal contribution to portfolio performance using cooperative game theory. Enumerates all factor subsets and averages marginal contributions. Computational complexity is O(2^n) where n is the number of factors.
+Score each boolean factor by the returns of the factor combinations that include it. For each date, it enumerates every non-empty factor combination, takes the mean excess return of the stocks that satisfy every factor in the combination (0 when none), and splits it evenly among the combination's factors; a factor's value is the sum of its shares over all combinations that include it. Despite the name, this is not the game-theoretic Shapley value: it does not measure the change in return from adding a factor, and the values do not sum to the return when all factors hold together. A higher value means the combinations containing the factor performed better. Computational complexity is O(2^n) where n is the number of factors.
 
 **Signature:**
 ```python
@@ -294,7 +294,7 @@ calc_shapley_values(
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
-- `pd.DataFrame`: Daily Shapley values for each factor. Indexed by date with factor names as columns
+- `pd.DataFrame`: Per-date contribution score for each factor. Indexed by date with factor names as columns
 
 **Example:**
 ```python
@@ -584,7 +584,7 @@ plt.show()
 1. **Use Rank IC for robustness** - Rank IC is more stable than raw IC
 2. **Analyze IC over time** - Look for consistent positive IC, not just average IC
 3. **Check IC trend** - Use calc_regression_stats to identify deteriorating factors
-4. **Calculate Shapley values** - Understand true factor contributions in multi-factor strategies
+4. **Calculate Shapley values** - See which factors appear in the best-performing factor combinations
 5. **Test multiple horizons** - Different factors may work at different time scales
 6. **Combine complementary factors** - Factors with low correlation often work better together
 7. **Monitor factor centrality** - High centrality may indicate overcrowding
