@@ -23,13 +23,15 @@ from finlab.schemas import (
 )
 ```
 
-**Deprecation note:** `symbol` is the canonical field — see `docs/details/typed_data_interfaces.md` in the finlab repo. `stock_id` is still accepted as an alias in dict payloads (`Position` entries, `from_dict()` input), but the dataclasses only have `symbol`: `entry.stock_id` raises `AttributeError`.
+**Deprecation note:** `symbol` is the canonical field — see `docs/details/typed_data_interfaces.md` in the finlab repo. `stock_id` is still accepted as an alias in dict payloads (`Position` entries, `from_dict()` input), but on the dataclasses `entry.stock_id` raises `AttributeError`.
 
 ---
 
 ## Position Class
 
 The `Position` class represents target holdings and provides methods for converting backtest results to executable positions.
+
+`quantity` is in board lots (張), not shares: one Taiwan lot is 1,000 shares and the decimal part is odd-lot shares. Negative quantities are short positions.
 
 **Import:**
 ```python
@@ -55,7 +57,7 @@ Position.from_report(
 - `odd_lot` (bool, default=False): Enable odd lot (零股) trading for smaller positions
 
 **Returns:**
-- `Position`: Target holdings; each entry has symbol, quantity (in lots, see [Custom Position](#custom-position)), and order_condition
+- `Position`: Target holdings, one entry per stock; `quantity` is in lots (see [Position Class](#position-class))
 
 **Example:**
 ```python
@@ -70,7 +72,7 @@ print(position)
 # symbol stock_id  quantity order_condition  weight
 #   2330     2330         1            CASH     0.1
 
-position.position  # the underlying list of entry dicts
+entries = position.position  # list of entry dicts, one per stock
 
 # Odd lot trading (smaller positions)
 position = Position.from_report(report, fund=1000000, odd_lot=True)
@@ -86,8 +88,6 @@ Create a position manually without backtest.
 ```python
 Position(stocks: dict[str, float]) -> Position
 ```
-
-`quantity` is in board lots (張), not shares. For Taiwan stocks one lot is 1,000 shares, so `{'2330': 1}` means 1,000 shares; the decimal part is odd-lot shares (`1.001` = 1 lot + 1 share). Negative quantities are short positions.
 
 **Example:**
 ```python
@@ -373,7 +373,7 @@ executor.generate_orders(
 executor.generate_order_entries(quantity_type: str = 'decimal') -> list[OrderEntry]  # typed convenience API
 ```
 
-`quantity` is in lots, like `Position`: positive = buy, negative = sell. `quantity_type` only sets the Python type of `quantity` in `OrderEntry` output; it does not change the unit, and it is ignored when `generate_orders()` returns dicts.
+`quantity` is in lots (see [Position Class](#position-class)): positive = buy, negative = sell. `quantity_type` sets the Python type of `OrderEntry.quantity`, not its unit, and is ignored when `generate_orders()` returns dicts.
 
 **Example:**
 ```python
@@ -433,8 +433,8 @@ acc = SinopacAccount()
 
 def on_update(update):
     # update is a PositionUpdate: a snapshot of the whole account
-    # (account_id, broker, position, time, source='poll' | 'fill')
-    for e in update.position:  # update.position is a Position
+    # (account_id, broker, position: Position, time, source='poll' | 'fill')
+    for e in update.position:
         print(update.source, e['symbol'], e['quantity'], e['order_condition'])
 
 # Register the callback first: subscribe_positions() emits the initial snapshot immediately
@@ -444,7 +444,7 @@ acc.subscribe_positions()
 
 **Why hybrid:** Fill-event streams catch fills with sub-second latency but can miss events during disconnects; polling catches missed state but is slow. Combining both gives real-time responsiveness without state divergence risk.
 
-An update is emitted only when the snapshot changes (`PositionUpdate.snapshot_key()` is compared internally), so unchanged polls do not call your callback.
+The callback fires only when the snapshot changes (deduplicated internally via `PositionUpdate.snapshot_key()`).
 
 ---
 
