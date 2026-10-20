@@ -460,7 +460,7 @@ report.to_html("report.html")  # the file is what the user opens
 
 ## Exception Hierarchy — `finlab.exceptions`
 
-*(v2.0.0)* Previously most errors were raised as bare `Exception` or `ValueError`. Production code can now `except` on specific subclasses:
+*(v2.0.0)* Data-layer failures (quota, missing dataset, download) raise `DataError` subclasses; `sim()` input errors are still built-in `ValueError` / `TypeError`:
 
 ```python
 from finlab.exceptions import (
