@@ -433,4 +433,4 @@ Direct users to open an issue on GitHub: https://github.com/koreal6803/finlab-ai
 
 - Some data columns use Chinese names — this is expected, use them as-is in `data.get()` calls
 - Data frequency varies: daily (price), monthly (revenue), quarterly (financial statements)
-- `sim()` defaults to `upload=None` *(v2.0.24)*: only cloud-scheduled runs (which set `FINLAB_FORCED_STRATEGY_NAME`) upload; all other runs, FinLab Studio included, do not. Pass `upload=True` (or call `report.upload()` afterwards) to upload, `upload=False` to guarantee no upload
+- `sim()` defaults to `upload=None` *(v2.1.0)*: it uploads only when `FINLAB_FORCED_STRATEGY_NAME` is set (cloud-scheduled runs, notebooks run on the FinLab Studio website); `FINLAB_STRATEGY_NAME` alone no longer triggers an upload. Local scripts, Jupyter and Colab do not upload unless you pass `upload=True` (or call `report.upload()` afterwards); `upload=False` never uploads
