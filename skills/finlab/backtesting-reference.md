@@ -220,6 +220,17 @@ print(metrics['risk']['maxDrawdown'])
 - `winrate` - winRate, m12WinRate, expectancy, mae, mfe
 - `liquidity` - capacity, disposalStockRatio, warningStockRatio
 
+**Sortino and its check-up threshold:** Reports with
+`metrics['backtest']['sortinoMethod'] == 'downside_deviation'` use
+`sqrt(mean(min(excess_return, 0)**2))` over all valid returns, including zero
+contributions from above-target returns. The check-up passes at Sortino > 1.6.
+Older saved reports without this marker retain the former > 1.8 threshold.
+The new calculation generally lowers positive Sortino values; do not compare
+old and new values as if the strategy itself had changed. Recompute both
+strategies with the same FinLab version when comparing them. A threshold of
+1.6 approximates the previous 1.8 standard; it does not preserve every
+strategy's pass/fail result exactly.
+
 ### `report.to_html()` — the canonical deliverable
 
 **Signature:**
