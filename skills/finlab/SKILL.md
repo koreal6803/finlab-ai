@@ -162,24 +162,30 @@ Use `data.get("<TABLE>:<COLUMN>")` to retrieve data:
 from finlab import data
 
 # Price data
-close = data.get("price:收盤價")
-volume = data.get("price:成交股數")
+close = data.get("price:收盤價")  # TWD
+volume = data.get("price:成交股數")  # shares
 
 # Financial statements
-roe = data.get("fundamental_features:ROE稅後")
-revenue = data.get("monthly_revenue:當月營收")
+roe = data.get("fundamental_features:ROE稅後")  # %
+revenue = data.get("monthly_revenue:當月營收")  # thousand TWD
+eps = data.get("financial_statement:每股盈餘")  # TWD, that quarter alone
 
 # Valuation
 pe = data.get("price_earning_ratio:本益比")
 pb = data.get("price_earning_ratio:股價淨值比")
 
 # Institutional trading
-foreign_buy = data.get("institutional_investors_trading_summary:外陸資買賣超股數(不含外資自營商)")
+foreign_buy = data.get("institutional_investors_trading_summary:外陸資買賣超股數(不含外資自營商)")  # shares
+
+# Market benchmark
+taiex = data.get("taiex_total_index:收盤指數")  # TAIEX close
 
 # Technical indicators
 rsi = data.indicator("RSI", timeperiod=14)
 macd, macd_signal, macd_hist = data.indicator("MACD", fastperiod=12, slowperiod=26, signalperiod=9)
 ```
+
+Taiwan tables keep the exchange's units. Money in `monthly_revenue:*` and `financial_statement:*` is thousand TWD (千元): a monthly revenue of 214,752,761 is NT$214.75 billion. Prices and per-share figures are TWD; volumes and institutional net buys are shares. Income-statement fields of `financial_statement:*`, EPS included, cover that quarter alone, not the year to date. Monthly revenue is dated when it is disclosed, by the 10th of the following month: the row dated 2026-10-12 is September's revenue. `data.describe("<TABLE>:<COLUMN>")` returns a field's catalog description.
 
 **Filter by market/category using `data.universe()`:**
 
