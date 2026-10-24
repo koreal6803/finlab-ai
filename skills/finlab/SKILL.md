@@ -167,7 +167,7 @@ volume = data.get("price:成交股數")  # shares
 
 # Financial statements
 roe = data.get("fundamental_features:ROE稅後")  # %
-revenue = data.get("monthly_revenue:當月營收")  # thousand TWD
+revenue = data.get("monthly_revenue:當月營收")  # thousand TWD, dated when disclosed: the 2026-10-12 row is September
 eps = data.get("financial_statement:每股盈餘")  # TWD, that quarter alone
 
 # Valuation
@@ -185,7 +185,7 @@ rsi = data.indicator("RSI", timeperiod=14)
 macd, macd_signal, macd_hist = data.indicator("MACD", fastperiod=12, slowperiod=26, signalperiod=9)
 ```
 
-Taiwan tables keep the exchange's units. Money in `monthly_revenue:*` and `financial_statement:*` is thousand TWD (千元): a monthly revenue of 214,752,761 is NT$214.75 billion. Prices and per-share figures are TWD; volumes and institutional net buys are shares. Income-statement fields of `financial_statement:*`, EPS included, cover that quarter alone, not the year to date. Monthly revenue is dated when it is disclosed, by the 10th of the following month: the row dated 2026-10-12 is September's revenue. `data.describe("<TABLE>:<COLUMN>")` returns a field's catalog description.
+Taiwan tables keep the exchange's units. Money in `monthly_revenue:*` and `financial_statement:*` is thousand TWD (千元): a monthly revenue of 214,752,761 is NT$214.75 billion. Prices and per-share figures are TWD; volumes and institutional net buys are shares. Income-statement fields of `financial_statement:*`, EPS included, cover that quarter alone, not the year to date. **Monthly revenue is dated when it is disclosed**, by the 10th of the following month: the row dated 2026-10-12 is September's revenue, so name the month it covers, not the month of its date. `data.describe("<TABLE>:<COLUMN>")` returns a field's catalog description.
 
 **Filter by market/category using `data.universe()`:**
 
