@@ -207,6 +207,8 @@ rev_rise_nsatisfy = 去年同月增減.rank(pct=True, axis=1)
 ### Special Calculations
 
 ```python
+import numpy as np
+
 # Rebalance on monthly revenue releases through the backtest API
 rev = data.get("monthly_revenue:當月營收")
 report = sim(position, resample=rev, upload=False)
@@ -886,21 +888,21 @@ report   = sim(position, resample='W')          # USMarket fee/tax defaults appl
 print(f"CAGR: {report.get_stats()['cagr']:.2%}")
 ```
 
-### S&P 500 quality screen (post-2022-11 only)
+### S&P 500 quality screen
 
 ```python
 from finlab import data
 from finlab.backtest import sim
 
 data.set_market('us')
-with data.us_universe(index='S&P 500'):
-    close = data.get('us_price:adj_close')
-    ocf   = data.get('us_cash_flow:operating_cash_flow')   # quarterly, filing-date aligned
-    eps   = data.get('us_income_statement:eps_diluted')
+close    = data.get('us_price:adj_close')
+ocf      = data.get('us_cash_flow:operating_cash_flow')   # quarterly, filing-date aligned
+eps      = data.get('us_income_statement:eps_diluted')
+in_sp500 = data.get('us_index_constituents:sp500')        # daily bool: True = member that day
 
-# Quality: positive OCF and rising trailing EPS
+# Quality: positive OCF and YoY quarterly EPS growth
 quality  = (ocf > 0) & (eps > eps.shift(4))
-position = quality & (close > close.average(200))
+position = quality & (close > close.average(200)) & in_sp500   # only that day's S&P 500 members
 report   = sim(position, resample='M')
 ```
 
