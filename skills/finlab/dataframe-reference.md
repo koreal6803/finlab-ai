@@ -526,7 +526,7 @@ industry_pb['半導體業'].plot(title='Semiconductor P/B Ratio')
 
 ### industry_rank
 
-Percentile rank from 0 (lowest) to 1 (highest) among industry peers. On Taiwan stocks a stock is ranked within every `security_industry_themes` theme it belongs to and those ranks are averaged, so this differs from `df.sector.rank()`, which ranks within the single `security_categories` industry.
+Percentile rank from 0 (lowest) to 1 (highest) among industry peers. On Taiwan stocks a stock is ranked within every top-level `security_industry_themes` theme it belongs to (names without `:`; sub-themes such as `LED照明產業:封裝_模組` are left out by default) and those ranks are averaged, so this differs from `df.sector.rank()`, which ranks within the single `security_categories` industry.
 
 **Signature:**
 ```python
@@ -534,7 +534,7 @@ industry_rank(categories: list = None) -> FinlabDataFrame
 ```
 
 **Parameters:**
-- `categories` (list, optional): List of industry categories to consider. If None, uses all industries from `data.get('security_industry_themes')`
+- `categories` (list, optional): List of industry categories to consider. If None, uses the top-level themes in `data.get('security_industry_themes')` (names without `:`); pass sub-theme names explicitly to include them
 
 **Returns:**
 - FinlabDataFrame with industry-relative ranking scores (0 to 1)
