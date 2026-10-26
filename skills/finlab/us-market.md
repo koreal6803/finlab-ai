@@ -28,12 +28,12 @@ These tables carry enough history and point-in-time discipline to be used in a b
 | `us_income_statement:*`            | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
 | `us_balance_sheet:*`               | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
 | `us_cash_flow:*`                   | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
-| `us_earnings_surprises:*`          | Event-based| 2015-01 → present  | ~12,000 tickers | DatetimeIndex          | `us`              |
+| `us_earnings_surprises:*`          | Event-based| 2015-01 → present  | ~12,500 tickers | DatetimeIndex          | `us`              |
 | `us_index_constituents:sp500`      | Daily      | 2015-01 → present  | ~503 members/day | DatetimeIndex          | `us`              |
 | `us_index_constituents:nasdaq100`  | Daily      | 2015-01 → present  | ~101 members/day | DatetimeIndex          | `us`              |
 | `world_index:adj_close`            | Daily      | 2015-07 → present  | 35 indices      | DatetimeIndex          | market-agnostic   |
 
-`us_fund_price:*` covers SPY, QQQ, sector SPDRs (XLK / XLF / XLE / …), country ETFs, leveraged/inverse ETFs, and mutual funds. Use it for sector-rotation, ETF momentum, or leveraged-ETF backtests — you must first call `data.set_market('us_fund')` because the major ETFs (SPY, QQQ, sector SPDRs, …) are not in `us_price`. See §4.2.
+`us_fund_price:*` covers SPY, QQQ, sector SPDRs (XLK / XLF / XLE / …), country ETFs, leveraged/inverse ETFs, and mutual funds. Use it for sector-rotation, ETF momentum, or leveraged-ETF backtests — you must first call `data.set_market('us_fund')`; see §4.2.
 
 Balance-sheet / cash-flow fields with confirmed coverage:
 `total_debt`, `total_stockholders_equity`, `net_debt`, `long_term_debt`, `short_term_debt`,
@@ -275,7 +275,7 @@ rets          = close.pct_change()
 extreme_today = rets.abs() >= 0.5
 # exclude a stock from day T+1 onward once it has shown an extreme move,
 # but leave it eligible on all prior days
-exclude_mask  = extreme_today.rolling(252, min_periods=1).max().shift(1).fillna(0) > 0
+exclude_mask  = extreme_today.rolling(252, min_periods=1).max().shift(1) > 0
 clean_mask    = ~exclude_mask.astype(bool)
 ```
 
