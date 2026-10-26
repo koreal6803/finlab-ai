@@ -61,12 +61,12 @@ sim(
 #### resample_offset
 - **Type:** `Union[str, None]`
 - **Default:** `None`
-- **Description:** An optional time offset (e.g., '1D', '7D') applied to rebalance dates.
+- **Description:** Time offset (e.g., '1D', '7D') applied to rebalance dates; see [best-practices.md](best-practices.md#pattern-6-adjust-rebalance-offset) for which offsets are safe.
 
 #### trade_at_price
 - **Type:** `Union[str, pd.DataFrame]`
 - **Default:** `'close'`
-- **Description:** Specifies which market price to use in the simulation. Options include 'close', 'open', 'open_close_avg', 'high_low_avg', or a custom DataFrame with price data. A custom price changes fills only: daily valuation and close-based stops still use the adjusted close, so pass prices on the same adjusted scale (e.g. `etl:adj_open` in Taiwan).
+- **Description:** Specifies which market price to use in the simulation. Options include 'close', 'open', 'open_close_avg', 'high_low_avg', or a custom DataFrame with price data. A custom DataFrame sets fill prices only; daily valuation and close-based stops still use the adjusted close, so pass adjusted prices (e.g. `etl:adj_open` in Taiwan).
 
 #### position_limit
 - **Type:** `float`
@@ -91,12 +91,12 @@ sim(
 #### stop_loss
 - **Type:** `Union[float, pd.DataFrame, None]`
 - **Default:** `None`
-- **Description:** Stop loss percentage threshold. If set to None, stop loss is disabled. *(v2.2.7)* A date × stock DataFrame sets per-date, per-stock thresholds; NaN or 0 means no stop for that stock.
+- **Description:** Stop loss percentage threshold. If set to None, stop loss is disabled. *(v2.2.7)* A date × stock DataFrame sets thresholds per cell; a NaN or 0 cell means no stop.
 
 #### take_profit
 - **Type:** `Union[float, pd.DataFrame, None]`
 - **Default:** `None`
-- **Description:** Take profit percentage threshold. If set to None, take profit is disabled. *(v2.2.7)* Also accepts a date × stock DataFrame, as `stop_loss` does.
+- **Description:** Take profit percentage threshold. If set to None, take profit is disabled. *(v2.2.7)* DataFrame thresholds work as in `stop_loss`.
 
 #### trail_stop
 - **Type:** `Union[float, None]`
@@ -123,7 +123,7 @@ sim(
 #### stop_trading_next_period
 - **Type:** `bool`
 - **Default:** `True`
-- **Description:** A stock exited by stop loss/take profit is not bought back at the next rebalance. `False` allows buying it back at that rebalance.
+- **Description:** When `True`, a stock exited by stop loss/take profit is not bought back at the next rebalance.
 
 #### mae_mfe_window
 - **Type:** `int`
@@ -383,7 +383,7 @@ Create factors or indicators that will be used in your strategy.
 - Logical operators: `&`, `|`, `~`
 
 **Important Notes:**
-- Do not use `==` for floating point comparisons. Use a tolerance range, e.g. `(close > 99.9) & (close < 100.1)`
+- Do not use `==` for floating point comparisons; compare within a tolerance band ([example](best-practices.md#-dont-use--for-float-comparisons))
 - Be cautious with `&` and `|` operators; ensure proper parentheses to avoid precedence issues
 - Never use `reindex()` or `reindex_like()`, including on final positions; use `sim(position, resample=...)` for schedules. FinlabDataFrame arithmetic, comparisons and boolean indexing automatically align dates and stock columns, including quarterly financial statements versus daily prices. For example, use `sales_to_price = eps_sales / close` directly.
 - Do not use for loops to iterate over rows or columns. Use vectorized operations instead
@@ -471,7 +471,7 @@ report.to_html("report.html")  # the file is what the user opens
 
 ## Exception Hierarchy — `finlab.exceptions`
 
-*(v2.0.0)* Quota, missing-dataset and signed-download failures raise `DataError` subclasses; VIP-only refusals and partial download failures are plain `RuntimeError`. `sim()` input errors are still built-in `ValueError` / `TypeError`:
+*(v2.0.0)* Quota, missing-dataset and signed-download failures raise `DataError` subclasses. VIP-only refusals and partial download failures raise built-in `RuntimeError`, and `sim()` input errors raise `ValueError` / `TypeError`:
 
 ```python
 from finlab.exceptions import (
