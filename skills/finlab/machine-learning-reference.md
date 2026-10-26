@@ -63,7 +63,7 @@ Calculate technical indicator values for a list of feature names.
 **Signature:**
 ```python
 feature.ta(
-    feature_names: Optional[List[str]],
+    feature_names: Optional[List[str]] = None,
     factories = None,
     resample = None,
     start_time = None,
@@ -391,13 +391,15 @@ from finlab import data
 from finlab.ml import feature, label
 from lightgbm import LGBMRegressor
 from sklearn.feature_selection import SelectKBest, f_regression
+import numpy as np
 import pandas as pd
 
 # Generate many features
 features_dict = {
     'pb': data.get('price_earning_ratio:股價淨值比'),
     'pe': data.get('price_earning_ratio:本益比'),
-    'ps': data.get('price:收盤價') / data.get('fundamental_features:每股營業額'),
+    # revenue per share can be 0 → inf; turn it into NaN so the mask below drops it
+    'ps': (data.get('price:收盤價') / data.get('fundamental_features:每股營業額')).replace([np.inf, -np.inf], np.nan),
     'rsi_14': data.indicator('RSI', timeperiod=14),
     'rsi_28': data.indicator('RSI', timeperiod=28),
     'macd': data.indicator('MACD')[0],  # MACD line
