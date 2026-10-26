@@ -398,8 +398,7 @@ import pandas as pd
 features_dict = {
     'pb': data.get('price_earning_ratio:股價淨值比'),
     'pe': data.get('price_earning_ratio:本益比'),
-    # revenue per share can be 0 → inf; turn it into NaN so the mask below drops it
-    'ps': (data.get('price:收盤價') / data.get('fundamental_features:每股營業額')).replace([np.inf, -np.inf], np.nan),
+    'ps': data.get('price:收盤價') / data.get('fundamental_features:每股營業額'),
     'rsi_14': data.indicator('RSI', timeperiod=14),
     'rsi_28': data.indicator('RSI', timeperiod=28),
     'macd': data.indicator('MACD')[0],  # MACD line
@@ -416,7 +415,9 @@ sample_filter = data.get('price:成交股數') > 200_000
 X = feature.combine(features_dict, resample='M', sample_filter=sample_filter)
 y = label.excess_over_mean(X.index, resample='M', period=1)
 
-# Remove NaN
+# Remove NaN and ±inf (ps is inf when revenue per share is 0; f_regression rejects inf).
+# Replace after combine: combine forward-fills NaN, so an earlier replace leaves stale values
+X = X.replace([np.inf, -np.inf], np.nan)
 mask = ~(X.isna().any(axis=1) | y.isna())
 X = X[mask]
 y = y[mask]
