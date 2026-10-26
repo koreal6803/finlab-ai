@@ -97,7 +97,7 @@ print(f'Labels shape: {labels.shape}')
 
 ### calc_factor_return
 
-Calculate equal-weight portfolio returns based on features and labels. Automatically validates features as boolean values, calculates equal-weight portfolio returns per factor, drops factors that never select any stock, and outputs starting from the first date on which every remaining factor has a return.
+Calculate equal-weight portfolio returns per factor from features and labels, after validating that features are boolean.
 
 **Signature:**
 ```python
@@ -112,7 +112,7 @@ calc_factor_return(
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
-- `pd.DataFrame`: Equal-weight portfolio period returns indexed by date with factor names as columns, starting from the first date on which every factor has a return; factors that never select any stock are removed
+- `pd.DataFrame`: Equal-weight portfolio period returns indexed by date, one column per factor that selects at least one stock, starting from the first date on which every column has a return
 
 **Example:**
 ```python
