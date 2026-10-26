@@ -74,7 +74,7 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
 ## Market Support
 
-FinLab supports TW (default), US, KR, JP, HK, UK, plus US funds/ETFs (`us_fund`), Taiwan emerging (`rotc`) and Taiwan convertible bonds (`tw_cb`). Pick the market once per session with `data.set_market(<code>)`; an unprefixed dataset name resolves to the active market's table (`price:close` → `us_price:close` under `us`). A name the active market lacks **silently falls back to the TW table**: Chinese keys (`price:收盤價`, `monthly_revenue:當月營收`) exist only for TW and `rotc`, so under `us`, `data.get('price:收盤價')` returns Taiwan prices. Outside TW, use English keys (`price:close`) or prefixed names (`us_price:adj_close`). `data.set_market('rotc')` *(v2.0.9)* enables 興櫃 (TW emerging) — use it when you need pre-listing price action or revenue factors that don't exist in the main TSE/OTC catalog. `tw_cb` is not a `set_market` code (it raises `ValueError`): read `cb_price:*` and pass `sim(position, market=TWCBMarket())` (`from finlab.markets.tw_cb import TWCBMarket`).
+FinLab supports `tw` (default), `us`, `kr`, `jp`, `hk`, `uk`, `us_fund` (US ETFs/funds), `rotc` (Taiwan emerging) and `tw_cb` (Taiwan convertible bonds). Pick the market once per session with `data.set_market(<code>)`; an unprefixed dataset name resolves to the active market's table (`price:close` → `us_price:close` under `us`). A name the active market lacks **silently falls back to the TW table**: Chinese keys (`price:收盤價`, `monthly_revenue:當月營收`) exist only for TW and `rotc`, so under `us`, `data.get('price:收盤價')` returns Taiwan prices. Outside TW, use English keys (`price:close`) or prefixed names (`us_price:adj_close`). `data.set_market('rotc')` *(v2.0.9)* enables 興櫃 (TW emerging) — use it when you need pre-listing price action or revenue factors that don't exist in the main TSE/OTC catalog. `tw_cb` is not a `set_market` code (it raises `ValueError`): read `cb_price:*` and pass `sim(position, market=TWCBMarket())` (`from finlab.markets.tw_cb import TWCBMarket`).
 
 The rest of this file plus [dataframe-reference.md](dataframe-reference.md), [backtesting-reference.md](backtesting-reference.md), [best-practices.md](best-practices.md), [factor-analysis-reference.md](factor-analysis-reference.md), and [machine-learning-reference.md](machine-learning-reference.md) are **market-agnostic** — the APIs behave the same across markets.
 
@@ -198,7 +198,7 @@ with data.universe(market='TSE_OTC', category=['水泥工業']):
 data.set_universe(market='TSE_OTC', category='半導體')
 ```
 
-Use `data.search('keyword', market='<market>')` to discover available datasets. Supported markets: `tw`, `rotc`, `us`, `us_fund`, `kr`, `jp`, `hk`, `uk`, or `all` to search every market. Use keywords in the dataset's native language (e.g. `data.search('營收', market='tw')`, `data.search('revenue', market='us')`).
+Use `data.search('keyword', market='<code>')` to discover available datasets; `market` takes any `set_market` code from [Market Support](#market-support), or `'all'` to search every market. Use keywords in the dataset's native language (e.g. `data.search('營收', market='tw')`, `data.search('revenue', market='us')`).
 
 ### Step 2: Create Factors & Conditions
 
@@ -417,7 +417,7 @@ See [best-practices.md](best-practices.md) for more anti-patterns.
 
 ## Performance Defaults
 
-**Pass `lazy=True` by default; drop to eager pandas only when debugging.** `data.get(..., lazy=True)` and `data.gets(..., lazy=True)` *(v2.0.0)* return a `LazyWide`, not a DataFrame: it defers the compute graph until a terminal call materializes it — chained ops avoid redundant passes (single-CPU). FinLabDataFrame methods and `sim()` take it directly; call `.collect()` before pandas access such as `.loc`, `.iloc`, `.columns`, `.index` or `pd.concat`. Omit `lazy=True` when you need to print/inspect intermediate values interactively.
+**Pass `lazy=True` by default; drop to eager pandas only when debugging.** `data.get(..., lazy=True)` and `data.gets(..., lazy=True)` *(v2.0.0)* return a `LazyWide` (not a DataFrame) that defers the compute graph until a terminal call materializes it — chained ops avoid redundant passes (single-CPU). FinLabDataFrame methods and `sim()` take it directly; don't collect before `sim()`, which computes only rebalance dates. For pandas access (`.loc`, `.iloc`, `.columns`, `.index`, `pd.concat`), collect once (`close = price.collect()`) and reuse the result: each `.collect()` recomputes the whole graph.
 
 ```python
 # ✅ Default: fetch lazy directly
