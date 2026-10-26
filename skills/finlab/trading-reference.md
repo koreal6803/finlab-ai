@@ -457,7 +457,7 @@ The callback fires only when the snapshot changes (deduplicated internally via `
 
 ## Cloud Strategy Deployment — `python -m finlab cloud` *(v2.0.1)*
 
-For users who want a strategy to run automatically every trading day without managing their own server, FinLab ships a CLI that deploys the strategy to the `finlab-auto-update` Cloud Functions runtime (Asia/Taipei schedule). This is operational tooling — it does not place broker orders by itself; pair it with the `OrderExecutor` workflow above if you want the cloud run to fire live trades.
+For users who want a strategy to run automatically on a schedule (daily by default; market holidays are not skipped) without managing their own server, FinLab ships a CLI that deploys the strategy to the `finlab-auto-update` Cloud Functions runtime (Asia/Taipei schedule). This is operational tooling — it does not place broker orders by itself; pair it with the `OrderExecutor` workflow above if you want the cloud run to fire live trades.
 
 ### Command Map
 
@@ -473,7 +473,7 @@ python -m finlab cloud delete <sid>     # remove strategy + schedule (history pr
 python -m finlab cloud status           # monthly budget / tier usage
 ```
 
-`<sid>` is your strategy identifier (free-form, but must stay stable — used as the Firestore document id).
+`<sid>` is your strategy identifier: it must start with a letter or number, contain only letters, numbers, `.`, `_`, and `-`, and be at most 64 characters. Keep it stable — it is used as the Firestore document id.
 
 ### Deploy
 
@@ -494,7 +494,7 @@ python -m finlab cloud deploy my_value_strategy \
 
 **Key flags:**
 - `--code <file.py>` *or* `--zip <archive.zip> --entry-script <relpath.py>` — choose one. Zip is for multi-file strategies.
-- `--time HH:MM` — daily trigger time in Asia/Taipei. Omit to deploy without a schedule (run manually with `cloud run`).
+- `--time HH:MM` — daily trigger time in Asia/Taipei. Omit on a new SID to deploy without a schedule (run manually with `cloud run`); re-deploying an existing SID without `--time` keeps its current schedule — stop it with `cloud schedule delete <sid>`.
 - `--tier {s,m,l,xl}` — compute tier. Larger tiers cost more per run; check `cloud status` for available tiers and monthly budget.
 - `--contest` / `--no-contest` / `--contest-alias <name>` — participate in FinLab's strategy contest under an alias.
 
@@ -520,7 +520,7 @@ python -m finlab cloud status                # current month
 python -m finlab cloud status --month 2026-04
 ```
 
-Returns monthly budget, used quota, remaining quota, available tiers, and per-tier execution counts. Check this before deploying a high-tier strategy; you cannot exceed the monthly budget.
+Returns monthly budget, used quota, remaining quota, available tiers, and execution counts (success / error / timeout). Check this before deploying a high-tier strategy; you cannot exceed the monthly budget.
 
 ### Typical Flow
 
