@@ -97,7 +97,7 @@ print(f'Labels shape: {labels.shape}')
 
 ### calc_factor_return
 
-Calculate equal-weight portfolio returns based on features and labels. Automatically validates features as boolean values, calculates equal-weight portfolio returns per factor, and outputs starting from the first non-empty row.
+Calculate equal-weight portfolio returns based on features and labels. Automatically validates features as boolean values, calculates equal-weight portfolio returns per factor, drops factors that never select any stock, and outputs starting from the first date on which every remaining factor has a return.
 
 **Signature:**
 ```python
@@ -112,7 +112,7 @@ calc_factor_return(
 - `labels` (pd.Series, required): Label Series with the same MultiIndex and excess returns as values
 
 **Returns:**
-- `pd.DataFrame`: Equal-weight portfolio period returns indexed by date with factor names as columns, starting from the first non-empty row
+- `pd.DataFrame`: Equal-weight portfolio period returns indexed by date with factor names as columns, starting from the first date on which every factor has a return; factors that never select any stock are removed
 
 **Example:**
 ```python
@@ -192,21 +192,23 @@ print(ic_df.mean() / ic_df.std())  # IC IR (Information Ratio)
 
 ### ic
 
-Calculate Information Coefficient (IC) for factors. Internally calls calc_metric with cross-sectional correlation as the evaluation function.
+Calculate Information Coefficient (IC) for factors: Pearson by default, Spearman Rank IC with `method='spearman'`. Internally calls calc_metric with cross-sectional correlation as the evaluation function.
 
 **Signature:**
 ```python
 ic(
     factor: pd.DataFrame | Dict[str, pd.DataFrame],
     adj_close: pd.DataFrame,
-    days: list[int] = [10, 20, 60, 120]
+    days: list[int] | None = None,
+    method: str = 'pearson'
 ) -> pd.DataFrame
 ```
 
 **Parameters:**
 - `factor` (pd.DataFrame or dict, required): Factor data as DataFrame (columns are stock IDs) or dict[str, DataFrame] (keys are factor names)
 - `adj_close` (pd.DataFrame, required): Adjusted closing price DataFrame (columns are stock IDs) for calculating future returns
-- `days` (list[int], optional, default=[10, 20, 60, 120]): Prediction horizon list for calculating d-day future returns
+- `days` (list[int], optional, default=None): Prediction horizon list for calculating d-day future returns; `None` uses [10, 20, 60, 120]
+- `method` (str, optional, default='pearson'): `'pearson'` computes Pearson IC; `'spearman'` computes Spearman Rank IC
 
 **Returns:**
 - `pd.DataFrame`: IC for each factor at different prediction horizons. Column names are <factor>_<days>, indexed by date
