@@ -902,7 +902,7 @@ in_sp500 = data.get('us_index_constituents:sp500')        # daily bool: True = m
 
 # Quality: positive OCF and YoY quarterly EPS growth
 quality  = (ocf > 0) & (eps > eps.shift(4))
-position = quality & (close > close.average(200)) & in_sp500   # only that day's S&P 500 members
+position = quality & (close > close.average(200)) & in_sp500
 report   = sim(position, resample='M')
 ```
 
