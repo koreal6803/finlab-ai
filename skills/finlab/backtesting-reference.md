@@ -26,8 +26,8 @@ sim(
     fee_ratio: Union[float, None] = None,   # None -> market default (TW: 1.425/1000)
     tax_ratio: Union[float, None] = None,   # None -> market default (TW: 3/1000)
     name: str = '未命名',
-    stop_loss: Union[float, None] = None,
-    take_profit: Union[float, None] = None,
+    stop_loss: Union[float, pd.DataFrame, None] = None,
+    take_profit: Union[float, pd.DataFrame, None] = None,
     trail_stop: Union[float, None] = None,
     trail_stop_activation: Union[float, None] = None,
     touched_exit: bool = False,
@@ -61,12 +61,12 @@ sim(
 #### resample_offset
 - **Type:** `Union[str, None]`
 - **Default:** `None`
-- **Description:** An optional time offset (e.g., '1D', '1H') applied to rebalance dates.
+- **Description:** An optional time offset (e.g., '1D', '7D') applied to rebalance dates.
 
 #### trade_at_price
 - **Type:** `Union[str, pd.DataFrame]`
 - **Default:** `'close'`
-- **Description:** Specifies which market price to use in the simulation. Options include 'close', 'open', 'open_close_avg', 'high_low_avg', or a custom DataFrame with price data.
+- **Description:** Specifies which market price to use in the simulation. Options include 'close', 'open', 'open_close_avg', 'high_low_avg', or a custom DataFrame with price data. A custom price changes fills only: daily valuation and close-based stops still use the adjusted close, so pass prices on the same adjusted scale (e.g. `etl:adj_open` in Taiwan).
 
 #### position_limit
 - **Type:** `float`
@@ -89,14 +89,14 @@ sim(
 - **Description:** Name for the strategy (for reporting purposes).
 
 #### stop_loss
-- **Type:** `Union[float, None]`
+- **Type:** `Union[float, pd.DataFrame, None]`
 - **Default:** `None`
-- **Description:** Stop loss percentage threshold. If set to None, stop loss is disabled.
+- **Description:** Stop loss percentage threshold. If set to None, stop loss is disabled. *(v2.2.7)* A date × stock DataFrame sets per-date, per-stock thresholds; NaN or 0 means no stop for that stock.
 
 #### take_profit
-- **Type:** `Union[float, None]`
+- **Type:** `Union[float, pd.DataFrame, None]`
 - **Default:** `None`
-- **Description:** Take profit percentage threshold. If set to None, take profit is disabled.
+- **Description:** Take profit percentage threshold. If set to None, take profit is disabled. *(v2.2.7)* Also accepts a date × stock DataFrame, as `stop_loss` does.
 
 #### trail_stop
 - **Type:** `Union[float, None]`
@@ -123,7 +123,7 @@ sim(
 #### stop_trading_next_period
 - **Type:** `bool`
 - **Default:** `True`
-- **Description:** If a stop loss/take profit event occurs, trading is suspended for the next period.
+- **Description:** A stock exited by stop loss/take profit is not bought back at the next rebalance. `False` allows buying it back at that rebalance.
 
 #### mae_mfe_window
 - **Type:** `int`
@@ -272,6 +272,7 @@ report.display()
 trades_df = report.get_trades()
 
 # Persist the full Report object (for later re-rendering / programmatic access)
+from finlab.core.report import Report
 report.to_pickle("report.pkl")
 loaded_report = Report.from_pickle("report.pkl")
 
@@ -382,7 +383,7 @@ Create factors or indicators that will be used in your strategy.
 - Logical operators: `&`, `|`, `~`
 
 **Important Notes:**
-- Do not use `==` for floating point comparisons. Use `np.isclose()` instead
+- Do not use `==` for floating point comparisons. Use a tolerance range, e.g. `(close > 99.9) & (close < 100.1)`
 - Be cautious with `&` and `|` operators; ensure proper parentheses to avoid precedence issues
 - Never use `reindex()` or `reindex_like()`, including on final positions; use `sim(position, resample=...)` for schedules. FinlabDataFrame arithmetic, comparisons and boolean indexing automatically align dates and stock columns, including quarterly financial statements versus daily prices. For example, use `sales_to_price = eps_sales / close` directly.
 - Do not use for loops to iterate over rows or columns. Use vectorized operations instead
@@ -470,7 +471,7 @@ report.to_html("report.html")  # the file is what the user opens
 
 ## Exception Hierarchy — `finlab.exceptions`
 
-*(v2.0.0)* Data-layer failures (quota, missing dataset, download) raise `DataError` subclasses; `sim()` input errors are still built-in `ValueError` / `TypeError`:
+*(v2.0.0)* Quota, missing-dataset and signed-download failures raise `DataError` subclasses; VIP-only refusals and partial download failures are plain `RuntimeError`. `sim()` input errors are still built-in `ValueError` / `TypeError`:
 
 ```python
 from finlab.exceptions import (
