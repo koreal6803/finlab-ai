@@ -135,7 +135,8 @@ Use `data.search('keyword', market='<market>')` to discover available datasets a
 ```python
 report = sim(position, resample="M", upload=False)
 report.to_html("report.html")   # equity curve + metrics + trade list, browser-openable
-print(f"CAGR {report.get_stats()['cagr']:.2%}  Sharpe {report.get_stats()['daily_sharpe']:.2f}")
+stats = report.get_stats()
+print(f"CAGR {stats['cagr']:.2%}  Sharpe {stats['daily_sharpe']:.2f}")
 print("Open report.html to inspect the full report.")
 ```
 
@@ -338,7 +339,9 @@ When using `fillna()` before ranking (e.g. to compute indicators like SLOPE), th
 
 ```python
 import talib
+from finlab import data
 
+close = data.get("price:收盤價")
 ratio = close / close.shift(5)
 # fillna(1) needed for SLOPE, but those cells shouldn't count in rank
 score = ratio.fillna(1).apply(lambda s: talib.LINEARREG_SLOPE(s, timeperiod=5))
