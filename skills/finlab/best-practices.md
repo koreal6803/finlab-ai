@@ -135,7 +135,7 @@ Use `data.search('keyword', market='<market>')` to discover available datasets a
 ```python
 report = sim(position, resample="M", upload=False)
 report.to_html("report.html")   # equity curve + metrics + trade list, browser-openable
-print(f"CAGR {report.get_stats()['cagr']:.2%}  Sharpe {report.get_stats()['monthly_sharpe']:.2f}")
+print(f"CAGR {report.get_stats()['cagr']:.2%}  Sharpe {report.get_stats()['daily_sharpe']:.2f}")
 print("Open report.html to inspect the full report.")
 ```
 
@@ -337,6 +337,8 @@ top_momentum = momentum.rank(axis=1, pct=True) > 0.7
 When using `fillna()` before ranking (e.g. to compute indicators like SLOPE), the filled values inflate the rank denominator and shift all percentiles. Use `valid=` to exclude them:
 
 ```python
+import talib
+
 ratio = close / close.shift(5)
 # fillna(1) needed for SLOPE, but those cells shouldn't count in rank
 score = ratio.fillna(1).apply(lambda s: talib.LINEARREG_SLOPE(s, timeperiod=5))
@@ -482,7 +484,7 @@ Use fixed-day offsets: `"1W"` snaps to the next Sunday, and `"1M"` raises `Value
 
 1. **等待重置** - UTC+8 早上 8 點會自動重置用量
 2. **升級方案** - 升級可獲得更多資料用量，詳見 https://www.finlab.finance/payment
-3. **減少用量** - 避免重複取得相同數據，將常用數據存入變數；使用 `data.universe()` 限制股票範圍
+3. **減少用量** - 避免重複取得相同數據，將常用數據存入變數
 
 ### Debugging Tips
 
