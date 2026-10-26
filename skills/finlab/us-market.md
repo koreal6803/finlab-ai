@@ -24,16 +24,16 @@ These tables carry enough history and point-in-time discipline to be used in a b
 | Table                              | Frequency  | History            | Coverage        | Alignment field       | Market            |
 |------------------------------------|------------|--------------------|-----------------|------------------------|-------------------|
 | `us_price:*` (adj_close, volume…)  | Daily      | 2016-01 → present  | ~10,600 tickers | DatetimeIndex          | `us` (equities)   |
-| `us_fund_price:*` (adj_close, volume…) | Daily  | 2016-01 → present  | ~9,300 ETFs/funds | DatetimeIndex        | `us_fund` (ETFs)  |
+| `us_fund_price:*` (adj_close, volume…) | Daily  | 2016-01 → present  | ~12,100 ETFs/funds | DatetimeIndex       | `us_fund` (ETFs)  |
 | `us_income_statement:*`            | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
 | `us_balance_sheet:*`               | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
 | `us_cash_flow:*`                   | Quarterly  | 2015-Q1 → present  | ~10,000 tickers | `key_date` (§2)        | `us`              |
-| `us_earnings_surprises:*`          | Event-based| 2015-01 → 2025-12  | ~12,000 tickers | DatetimeIndex          | `us`              |
+| `us_earnings_surprises:*`          | Event-based| 2015-01 → present  | ~12,000 tickers | DatetimeIndex          | `us`              |
 | `us_index_constituents:sp500`      | Daily      | 2015-01 → present  | ~503 members/day | DatetimeIndex          | `us`              |
 | `us_index_constituents:nasdaq100`  | Daily      | 2015-01 → present  | ~101 members/day | DatetimeIndex          | `us`              |
 | `world_index:adj_close`            | Daily      | 2015-07 → present  | 35 indices      | DatetimeIndex          | market-agnostic   |
 
-`us_fund_price:*` covers SPY, QQQ, sector SPDRs (XLK / XLF / XLE / …), country ETFs, leveraged/inverse ETFs, and mutual funds. Use it for sector-rotation, ETF momentum, or leveraged-ETF backtests — you must first call `data.set_market('us_fund')` because ETF tickers are not present in `us_price`. See §4.2.
+`us_fund_price:*` covers SPY, QQQ, sector SPDRs (XLK / XLF / XLE / …), country ETFs, leveraged/inverse ETFs, and mutual funds. Use it for sector-rotation, ETF momentum, or leveraged-ETF backtests — you must first call `data.set_market('us_fund')` because the major ETFs (SPY, QQQ, sector SPDRs, …) are not in `us_price`. See §4.2.
 
 Balance-sheet / cash-flow fields with confirmed coverage:
 `total_debt`, `total_stockholders_equity`, `net_debt`, `long_term_debt`, `short_term_debt`,
@@ -94,7 +94,7 @@ The S&P 500 history before 2022-11-08 is rebuilt from archived Wikipedia snapsho
 
 ### 1.5 `us_earnings_surprises` sparsity
 
-Density is ~0.64% (262K non-null cells across 3,415 dates × 12,077 tickers). Post-earnings-announcement-drift (PEAD) strategies that require dense daily surprise data are not viable from this table. Event-based joins (look up a single stock on its announcement date) work fine; rolling cross-sectional factors do not.
+Density is ~0.61% (280K non-null cells across 3,643 dates × 12,541 tickers, as of 2026-10). Post-earnings-announcement-drift (PEAD) strategies that require dense daily surprise data are not viable from this table. Event-based joins (look up a single stock on its announcement date) work fine; rolling cross-sectional factors do not.
 
 ---
 
@@ -170,7 +170,7 @@ report   = sim(position, resample='W')          # fee/tax/trade_at_price come fr
 
 ### 4.2 ETFs and funds (`USFundMarket`)
 
-When the strategy trades tickers such as SPY, QQQ, sector SPDRs, or leveraged ETFs, switch the market to `us_fund`. ETF tickers are **not** in `us_price`, so `sim()` on `us` cannot match them; `us_fund` is the right gate. Typical defaults (same commission-free assumption as equities):
+When the strategy trades tickers such as SPY, QQQ, sector SPDRs, or leveraged ETFs, switch the market to `us_fund`. These major ETFs are **not** in `us_price`, so `sim()` on `us` cannot match them; `us_fund` is the right gate. Typical defaults (same commission-free assumption as equities):
 
 | Parameter           | Default    | Why                                                    |
 |---------------------|-----------:|--------------------------------------------------------|
@@ -275,7 +275,7 @@ rets          = close.pct_change()
 extreme_today = rets.abs() >= 0.5
 # exclude a stock from day T+1 onward once it has shown an extreme move,
 # but leave it eligible on all prior days
-exclude_mask  = extreme_today.rolling(252, min_periods=1).max().shift(1).fillna(False) > 0
+exclude_mask  = extreme_today.rolling(252, min_periods=1).max().shift(1).fillna(0) > 0
 clean_mask    = ~exclude_mask.astype(bool)
 ```
 
