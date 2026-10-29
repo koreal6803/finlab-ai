@@ -19,7 +19,8 @@ class QuarterDateCoverageTest(unittest.TestCase):
                               index=["2025-Q1", "2025-Q2"])
         dates = pd.DataFrame({"2468": ["2025-05-15", "2025-08-14"],
                               "6505": ["2025-05-15", None]}, index=values.index)
-        validate(values, {"disclosures": dates, "deadlines": dates})
+        date_tables = {"disclosures": dates, "deadlines": dates}
+        validate(values, date_tables)
         cases = [dates.iloc[:1], dates.drop(columns="2468")]
         for bad_date in (None, "not-a-date"):
             broken = dates.copy()
@@ -28,11 +29,10 @@ class QuarterDateCoverageTest(unittest.TestCase):
         original_values, original_dates = values.copy(), dates.copy()
         for broken in cases:
             saved = broken.copy()
-            for name in ("disclosures", "deadlines"):
+            for name in date_tables:
                 with self.subTest(name=name, shape=broken.shape):
-                    tables = {"disclosures": dates, "deadlines": dates, name: broken}
                     with self.assertRaisesRegex(ValueError, name):
-                        validate(values, tables)
+                        validate(values, date_tables | {name: broken})
                     pd.testing.assert_frame_equal(broken, saved)
         pd.testing.assert_frame_equal(values, original_values)
         pd.testing.assert_frame_equal(dates, original_dates)

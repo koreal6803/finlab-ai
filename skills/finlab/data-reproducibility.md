@@ -25,8 +25,9 @@ if publications.empty:
     raise RuntimeError("No retained publication; stop this run")
 
 # Choose an actual retained timestamp instead of assuming an old date exists.
-published_at = publications.iloc[-1]["time_created"]
-generation = str(publications.iloc[-1]["generation"])
+latest = publications.iloc[-1]
+published_at = latest["time_created"]
+generation = str(latest["generation"])
 close_at_time = data.get(dataset, as_of=published_at)
 close_exact = data.get(dataset, version=generation)
 ```
@@ -49,14 +50,13 @@ def require_quarter_dates(
     values: pd.DataFrame, date_tables: dict[str, pd.DataFrame]
 ) -> None:
     """Raise ValueError for populated stock/quarter cells without valid dates."""
-    raw_values = pd.DataFrame(values)
+    populated = pd.DataFrame(values).notna()
     for name, dates in date_tables.items():
         covered = pd.DataFrame(dates).reindex(
-            index=raw_values.index, columns=raw_values.columns
+            index=populated.index, columns=populated.columns
         ).apply(pd.to_datetime, errors="coerce", format="ISO8601")
-        missing = raw_values.notna() & covered.isna()
-        cells = missing.stack()
-        gaps = cells[cells].index.tolist()
+        missing = (populated & covered.isna()).stack()
+        gaps = missing[missing].index.tolist()
         if gaps:
             raise ValueError(f"{name}: missing (quarter, stock) dates: {gaps[:10]}")
 ```
