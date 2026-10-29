@@ -200,6 +200,8 @@ data.set_universe(market='TSE_OTC', category='半導體')
 
 Use `data.search('keyword', market='<code>')` to discover available datasets; `market` takes any `set_market` code from [Market Support](#market-support), or `'all'` to search every market. Use keywords in the dataset's native language (e.g. `data.search('營收', market='tw')`, `data.search('revenue', market='us')`).
 
+For retained publication versions (`data.versions`, `as_of`, `version=`), complete `data.snapshot` recording/replay, and per-stock/per-quarter date coverage checks before offline research, read [data-reproducibility.md](data-reproducibility.md). A historical read of one table does not pin later date-conversion or backtest dependencies.
+
 ### Step 2: Create Factors & Conditions
 
 Use FinLabDataFrame methods to create boolean conditions:
@@ -338,6 +340,7 @@ See [trading-reference.md](trading-reference.md) for complete broker setup and O
 | [dataframe-reference.md](dataframe-reference.md)               | FinLabDataFrame 方法                       |
 | [factor-analysis-reference.md](factor-analysis-reference.md)   | IC、Shapley、因子分析                      |
 | [best-practices.md](best-practices.md)                         | 常見錯誤、lookahead bias                   |
+| [data-reproducibility.md](data-reproducibility.md)             | Historical publications, snapshot replay, quarterly date coverage |
 | [machine-learning-reference.md](machine-learning-reference.md) | ML 特徵工程                                |
 | [us-market.md](us-market.md)                                   | US market specifics: data map, quarterly alignment, defaults, universe construction |
 
