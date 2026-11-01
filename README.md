@@ -6,6 +6,10 @@
 
 FinLab AI is an official product of FinLab. FinLab official website: https://finlab.finance
 
+Backtest Taiwan and U.S. stocks from Claude Code, Codex or Gemini CLI: your AI gets real market data and the FinLab backtest engine, with no scraping or backtest code of your own.
+
+用 Claude Code、Codex 回測台股：AI 直接讀還原股價、月營收、財報、三大法人資料，用 FinLab 回測引擎驗證策略。
+
 <br>
 
 <img src="assets/demo.gif" alt="Demo" width="600">
