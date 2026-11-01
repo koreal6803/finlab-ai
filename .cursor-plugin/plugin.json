@@ -1,0 +1,21 @@
+{
+  "name": "finlab",
+  "description": "Backtest Taiwan and US stock strategies on real market data with the FinLab Python package: data access, backtesting, factor research, and 60+ strategy examples.",
+  "author": {
+    "name": "FinLab"
+  },
+  "homepage": "https://finlab.finance/agents",
+  "repository": "https://github.com/koreal6803/finlab-ai",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "backtesting",
+    "taiwan-stocks",
+    "us-stocks",
+    "quantitative-trading",
+    "stock-screening",
+    "finlab",
+    "台股",
+    "回測"
+  ],
+  "skills": "./skills/"
+}

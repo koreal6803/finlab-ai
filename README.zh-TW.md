@@ -16,10 +16,22 @@ FinLab AI 是 FinLab 官方產品。FinLab 官方網站：https://finlab.finance
 ## 安裝
 
 ```bash
-curl -sSf https://ai.finlab.finance/install.sh | sh
+npx skills add koreal6803/finlab-ai --skill finlab -g -y
 ```
 
-自動偵測你的 CLI（Claude Code / Codex / Gemini），安裝 [uv](https://docs.astral.sh/uv/)（如果沒有），然後設定 skill。
+這一行會把 skill 裝給 Claude Code、Codex、Cursor 與其他讀 Agent Skills 的工具，這台電腦的每個專案都用得到。也可以用工具自己的外掛指令：
+
+| 工具 | 指令 |
+|------|------|
+| Claude Code | `/plugin install finlab-plugin --marketplace koreal6803/finlab-ai` |
+| Codex | `codex plugin marketplace add koreal6803/finlab-ai`，再 `codex plugin add finlab-plugin@finlab-ai` |
+| Cursor | **Customize** > **From GitHub Repository** > `koreal6803/finlab-ai` |
+
+接著問你的 AI：「幫我回測月營收成長最強的台股策略」。第一次會請你在瀏覽器登入 FinLab 一次，自動建立免費帳號，含 7 天完整試用，不用信用卡。
+
+### 在你的電腦上會做什麼
+
+skill 本身是文件，沒有 hook，也沒有內附程式。它會請 AI 工具用 [uv](https://docs.astral.sh/uv/) 安裝 `finlab` Python 套件、執行 `python -m finlab login`（開瀏覽器登入），再從 FinLab 下載市場資料。策略程式在你的電腦上執行，沒有你的要求不會上傳任何東西。
 
 ## MCP Server
 

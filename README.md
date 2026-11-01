@@ -20,10 +20,22 @@ Backtest Taiwan and U.S. stocks from Claude Code, Codex or Gemini CLI: your AI g
 ## Installation
 
 ```bash
-curl -sSf https://ai.finlab.finance/install.sh | sh
+npx skills add koreal6803/finlab-ai --skill finlab -g -y
 ```
 
-Auto-detects your CLI (Claude Code / Codex / Gemini), installs [uv](https://docs.astral.sh/uv/) if needed, and sets up the skill.
+This installs the skill for Claude Code, Codex, Cursor and other tools that read Agent Skills, for every project on this machine. Or use your tool's own plugin command:
+
+| Tool | Command |
+|------|---------|
+| Claude Code | `/plugin install finlab-plugin --marketplace koreal6803/finlab-ai` |
+| Codex | `codex plugin marketplace add koreal6803/finlab-ai`, then `codex plugin add finlab-plugin@finlab-ai` |
+| Cursor | **Customize** > **From GitHub Repository** > `koreal6803/finlab-ai` |
+
+Then ask your AI: "Backtest a Taiwan stock strategy that buys the strongest monthly revenue growth." The first run asks you to sign in to FinLab once in your browser, which creates a free account with a 7-day full trial, no credit card needed.
+
+### What it does on your machine
+
+The skill is documentation: it has no hooks and no bundled programs. It tells your AI tool to install the `finlab` Python package with [uv](https://docs.astral.sh/uv/), sign in with `python -m finlab login`, which opens your browser, and download market data from FinLab. Strategy code runs on your machine, and nothing is uploaded unless you ask for it.
 
 ## MCP Server
 

@@ -1,12 +1,12 @@
 {
   "name": "finlab-ai",
   "owner": {
-    "name": "FinLab Community"
+    "name": "FinLab"
   },
   "plugins": [
     {
       "name": "finlab-plugin",
-      "description": "FinLab quantitative trading skills for global stock markets (TW, US, KR, JP, HK) - includes strategy development, backtesting, data analysis, and factor research",
+      "description": "Backtest Taiwan and US stock strategies on real market data with the FinLab Python package: data access, backtesting, factor research, and 60+ strategy examples.",
       "source": "./",
       "strict": true,
       "skills": [
