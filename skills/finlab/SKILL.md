@@ -308,7 +308,7 @@ See the "`report.to_html()` — the canonical deliverable" section of [backtesti
 
 ### Step 5: Execute Orders (Optional)
 
-Convert backtest results to live trading:
+Convert backtest results to live trading. **Never place real orders on your own:** run `create_orders(view_only=True)`, show the user the preview, and call `create_orders()` only after the user confirms those orders in this conversation.
 
 ```python
 from finlab.online.order_executor import Position, OrderExecutor
@@ -324,7 +324,7 @@ acc = SinopacAccount()
 executor = OrderExecutor(position, account=acc)
 executor.create_orders(view_only=True)  # Preview first
 
-# 4. Execute orders (when ready)
+# 4. Execute only after the user confirms the preview
 executor.create_orders()
 ```
 

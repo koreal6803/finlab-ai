@@ -315,7 +315,7 @@ executor.show_alerting_stocks()
 
 #### create_orders()
 
-Create orders based on the target position.
+Create orders based on the target position. `view_only` defaults to `False`, so a bare call places real orders: preview first and call it only after the user confirms those orders.
 
 **Signature:**
 ```python
@@ -330,10 +330,10 @@ create_orders(view_only: bool = False, ...) -> list[dict]
 
 **Example:**
 ```python
-# Preview orders first (recommended)
+# Preview orders first
 executor.create_orders(view_only=True)
 
-# Execute orders
+# Execute only after the user confirms the preview
 executor.create_orders()
 ```
 

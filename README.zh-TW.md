@@ -31,7 +31,7 @@ npx skills add koreal6803/finlab-ai --skill finlab -g -y
 
 ### 在你的電腦上會做什麼
 
-skill 本身是文件，沒有 hook，也沒有內附程式。它會請 AI 工具用 [uv](https://docs.astral.sh/uv/) 安裝 `finlab` Python 套件、執行 `python -m finlab login`（開瀏覽器登入），再從 FinLab 下載市場資料。策略程式在你的電腦上執行，沒有你的要求不會上傳任何東西。
+skill 本身是文件，沒有 hook，也沒有內附程式。它會請 AI 工具用 [uv](https://docs.astral.sh/uv/) 安裝 `finlab` Python 套件、執行 `python -m finlab login`（開瀏覽器登入），再從 FinLab 下載市場資料。策略程式在你的電腦上執行，沒有你的要求不會上傳任何東西。skill 也包含券商下單 API 的說明，並要求 AI 先給你看預覽，等你確認才下真實訂單。
 
 ## MCP Server
 
