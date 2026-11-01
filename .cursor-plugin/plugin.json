@@ -17,5 +17,6 @@
     "台股",
     "回測"
   ],
+  "logo": "assets/icon.png",
   "skills": "./skills/"
 }
