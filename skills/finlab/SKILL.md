@@ -308,6 +308,8 @@ See the "`report.to_html()` — the canonical deliverable" section of [backtesti
 
 ### Step 5: Execute Orders (Optional)
 
+**In FinLab Desktop**, when the `previewOrders` and `placeOrder` tools are available, use them instead of the code below: call `previewOrders` (the practice account unless the person names a broker they connected), tell the person the orders in plain words, and call `placeOrder` only after they ask to place them; FinLab Desktop then asks them to approve. Never write order code with broker keys there; if their broker is not connected, call `connectBroker`.
+
 Convert backtest results to live trading. **Never place real orders on your own:** run `create_orders(view_only=True)`, show the user the preview, and call `create_orders()` only after the user confirms those orders in this conversation.
 
 ```python
