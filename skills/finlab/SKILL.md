@@ -420,6 +420,34 @@ prev_close = close.shift(1)
 
 See [best-practices.md](best-practices.md) for more anti-patterns.
 
+## When Today's Taiwan Data Is Final
+
+Several tables update more than once after the close, and the early runs can publish a preliminary version. Before running a daily strategy soon after the close, check when the data it uses is final (finlab >= 2.3.9; no download):
+
+```python
+from finlab import data
+
+info = data.describe("price:成交股數")
+print(info["schedule"], info["schedule_timezone"], info["final_after"])
+# 32 15,16,18,21 * * * Asia/Taipei 18:32
+```
+
+- `schedule`: the runs that update the dataset, cron in `schedule_timezone`. An `etl:*` dataset is rebuilt after each table it reads, so it lists their runs.
+- `final_after`: the run after which the day's values are final. `None` means every run publishes complete data. It covers the whole table: `price` says 18:32 because of its volumes.
+- A run publishes a few to about 20 minutes after it starts. Typical times (Taipei):
+
+| Data | Day's final version | Note |
+|---|---|---|
+| `price` open, high, low, close | 15:32 run, ~15:50 | |
+| `price:成交股數`, `成交金額`, `成交筆數` | 18:32 run, ~18:50 | The 15:32 run lacks block trades (鉅額交易); 21:32 rechecks |
+| `etl:adj_close` and the other adjusted prices | ~15:50; a 17:00 run can update dividends or capital reductions | Catalog says 18:32, following `price` |
+| `etl:market_value` | 21:32 run, ~21:55 | Listed share counts update at 21:00 |
+| `institutional_investors_trading_summary` | 21:02 run, ~21:10 | The 18:02 run lacks block trades |
+| `foreign_investors_shareholding:發行股數` | 21:00 run, ~21:05 | Sometimes the 22:00 or 23:00 retry |
+| `monthly_revenue` | Days 1–20 at 07:01 and 17:01–20:01 | Every run has the companies reported so far; most report by the 10th |
+
+`data.is_tradable()` is stricter: it turns True only after the last scheduled run before the next open of every loaded dataset (21:32 for `price`).
+
 ## Performance Defaults
 
 **Pass `lazy=True` by default; drop to eager pandas only when debugging.** `data.get(..., lazy=True)` and `data.gets(..., lazy=True)` *(v2.0.0)* return a `LazyWide` (not a DataFrame) that defers the compute graph until a terminal call materializes it — chained ops avoid redundant passes (single-CPU). FinLabDataFrame methods and `sim()` take it directly; don't collect before `sim()`, which computes only rebalance dates. For pandas access (`.loc`, `.iloc`, `.columns`, `.index`, `pd.concat`), collect once (`close = price.collect()`) and reuse the result: each `.collect()` recomputes the whole graph.
