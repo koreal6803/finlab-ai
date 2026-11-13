@@ -19,7 +19,7 @@ FinLab AI 是 FinLab 官方產品。FinLab 官方網站：https://finlab.finance
 npx skills add koreal6803/finlab-ai --skill finlab -g -y
 ```
 
-這一行會把 skill 裝給 Claude Code、Codex、Cursor 與其他讀 Agent Skills 的工具，這台電腦的每個專案都用得到。也可以用工具自己的外掛指令：
+這一行會把 skill 裝給 Claude Code、Codex、Cursor 與其他讀 Agent Skills 的工具，這台電腦的每個專案都用得到。已經裝了 `finlab` 套件（2.3.9 以上）的話，`python -m finlab skill install` 效果一樣，不用 Node.js。也可以用工具自己的外掛指令：
 
 | 工具 | 指令 |
 |------|------|

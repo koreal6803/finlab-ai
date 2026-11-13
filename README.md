@@ -23,7 +23,7 @@ Backtest Taiwan and U.S. stocks from Claude Code, Codex or Gemini CLI: your AI g
 npx skills add koreal6803/finlab-ai --skill finlab -g -y
 ```
 
-This installs the skill for Claude Code, Codex, Cursor and other tools that read Agent Skills, for every project on this machine. Or use your tool's own plugin command:
+This installs the skill for Claude Code, Codex, Cursor and other tools that read Agent Skills, for every project on this machine. Already have the `finlab` package (2.3.9+)? `python -m finlab skill install` does the same without Node.js. Or use your tool's own plugin command:
 
 | Tool | Command |
 |------|---------|
