@@ -444,7 +444,7 @@ A run publishes a few to about 20 minutes after it starts. Typical times (Taipei
 | `price:成交股數`, `成交金額`, `成交筆數` | 18:32 (~18:50) | The 15:32 run lacks block trades (鉅額交易); 21:32 rechecks |
 | `foreign_investors_shareholding:發行股數` | 21:00 (~21:05) | Sometimes the 22:00 or 23:00 retry |
 | `institutional_investors_trading_summary` | 21:02 (~21:10) | The 18:02 run lacks block trades |
-| `etl:market_value` | 21:32 (~21:55) | Needs the 21:00 `發行股數` |
+| `etl:market_value` | 21:32 (~21:55) | Listed stocks' share counts arrive at 21:00 |
 | `monthly_revenue` | Every run (days 1–20, 07:01 and 17:01–20:01) | Each run has the companies reported so far |
 
 `data.is_tradable()` is stricter: True only once every loaded dataset has had its last scheduled run before the next open (21:32 for `price`).
