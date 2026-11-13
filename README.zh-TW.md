@@ -19,14 +19,13 @@ FinLab AI 是 FinLab 官方產品。FinLab 官方網站：https://finlab.finance
 npx skills add koreal6803/finlab-ai --skill finlab -g -y
 ```
 
-這一行會把 skill 裝給 Claude Code、Codex、Cursor 與其他讀 Agent Skills 的工具，這台電腦的每個專案都用得到。也可以用工具自己的外掛指令：
+這一行會把 skill 裝給 Claude Code、Codex、Cursor 與其他讀 Agent Skills 的工具，這台電腦的每個專案都用得到。已經裝了 `finlab` 套件（2.3.9 以上）的話，`python -m finlab skill install` 效果一樣，不用 Node.js。也可以用工具自己的外掛指令：
 
 | 工具 | 指令 |
 |------|------|
 | Claude Code | `/plugin install finlab-plugin --marketplace koreal6803/finlab-ai` |
 | Codex | `codex plugin marketplace add koreal6803/finlab-ai`，再 `codex plugin add finlab-plugin@finlab-ai` |
 | Cursor | **Customize** > **From GitHub Repository** > `koreal6803/finlab-ai` |
-| 已經裝了 `finlab` 套件（2.3.9 以上） | `python -m finlab skill install`，不用 Node.js |
 
 接著問你的 AI：「幫我回測月營收成長最強的台股策略」。第一次會請你在瀏覽器登入 FinLab 一次，自動建立免費帳號，含 7 天完整試用，不用信用卡。
 
