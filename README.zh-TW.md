@@ -26,6 +26,7 @@ npx skills add koreal6803/finlab-ai --skill finlab -g -y
 | Claude Code | `/plugin install finlab-plugin --marketplace koreal6803/finlab-ai` |
 | Codex | `codex plugin marketplace add koreal6803/finlab-ai`，再 `codex plugin add finlab-plugin@finlab-ai` |
 | Cursor | **Customize** > **From GitHub Repository** > `koreal6803/finlab-ai` |
+| 已經裝了 `finlab` 套件（2.3.9 以上） | `python -m finlab skill install`，不用 Node.js |
 
 接著問你的 AI：「幫我回測月營收成長最強的台股策略」。第一次會請你在瀏覽器登入 FinLab 一次，自動建立免費帳號，含 7 天完整試用，不用信用卡。
 

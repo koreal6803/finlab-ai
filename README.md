@@ -30,6 +30,7 @@ This installs the skill for Claude Code, Codex, Cursor and other tools that read
 | Claude Code | `/plugin install finlab-plugin --marketplace koreal6803/finlab-ai` |
 | Codex | `codex plugin marketplace add koreal6803/finlab-ai`, then `codex plugin add finlab-plugin@finlab-ai` |
 | Cursor | **Customize** > **From GitHub Repository** > `koreal6803/finlab-ai` |
+| Already have the `finlab` package (2.3.9+) | `python -m finlab skill install`, no Node.js needed |
 
 Then ask your AI: "Backtest a Taiwan stock strategy that buys the strongest monthly revenue growth." The first run asks you to sign in to FinLab once in your browser, which creates a free account with a 7-day full trial, no credit card needed.
 
