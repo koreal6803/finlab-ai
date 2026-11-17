@@ -214,8 +214,10 @@ pip install shioaji
 Masterlink merged into Taishin in April 2026. Use `TaishinAccount` and `TAISHIN_*` for new setups. The legacy `MasterlinkAccount` import and `MASTERLINK_*` variables still work; each `TAISHIN_*` value takes precedence over its legacy equivalent.
 
 **Install SDK before importing:**
+The setup below requires `finlab>=2.2.22`, which introduced `TaishinAccount` and `TAISHIN_*`. Upgrade older FinLab installations first.
 `taishin_sdk` is not on PyPI. Download the wheel matching your OS and CPU architecture from the [official SDK download page](https://ml-fugle-api.tssco.com.tw/FugleSDK/docs/download/download-sdk/), then install the downloaded file. The SDK officially supports Python 3.8–3.12.
 ```bash
+python -m pip install "finlab>=2.2.22"
 python -m pip install /path/to/taishin_sdk-*.whl
 ```
 
