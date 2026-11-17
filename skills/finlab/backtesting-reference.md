@@ -278,6 +278,7 @@ loaded_report = Report.from_pickle("report.pkl")
 
 # Run specific analysis modules (also rendered into to_html output)
 report.run_analysis("Drawdown")
+# Requires: pip install plotly
 report.run_analysis("MaeMfe")
 
 # ASCII fallback for terminals without a browser — supplement, not replacement
