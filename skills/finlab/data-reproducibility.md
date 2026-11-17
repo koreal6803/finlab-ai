@@ -1,6 +1,6 @@
 # Historical Versions and Reproducible Inputs
 
-These examples target the released **finlab 2.2.22** API. Updating this Skill changes guidance; it does not update the installed Python package or repair cached data. Install the example environment with `uv pip install "finlab==2.2.22"` and use the supported [login flow](SKILL.md#prerequisites) for online reads.
+Follow [SKILL.md prerequisites](SKILL.md#prerequisites) to install FinLab and sign in for online reads. For an existing environment, update with `uv pip install --upgrade finlab`. Updating this Skill changes guidance; it does not update the installed Python package or repair cached data.
 
 ## Select a published version of each table
 
@@ -63,7 +63,7 @@ def require_quarter_dates(
 
 Synchronize the financial values and their date dependencies while online, then validate them **before** conversion, backtesting, or replacing any accepted exports. If validation fails, stop the entire batch and keep the previous accepted snapshot/output files. Retain the failed inputs for diagnosis and retry synchronization in a new snapshot directory. Do not invent announcement dates, fill missing dates from another quarter, forward-fill a date table, or overwrite the original financial files.
 
-**Known behavior in 2.2.22:** incomplete offline date tables can silently leave an older quarter in the converted result. This helper stops such a run; upgrading to 2.2.22 alone does not add a missing-quarter warning. Coverage is a necessary check, not proof that a supplied date is correct or that all tables were published together.
+**Since finlab 2.2.23,** `deadline()` warns when populated financial cells lack date coverage, but conversion can still leave an older quarter in the result. This helper stops such a run before conversion. Coverage is a necessary check, not proof that a supplied date is correct or that all tables were published together.
 
 ## Record and strictly replay a complete strategy
 
@@ -73,7 +73,7 @@ Synchronize the financial values and their date dependencies while online, then 
 - `replay` reads those saved inputs, without falling back to ordinary caches or newer data. Missing inputs, different selections, missing files, or mismatched environment versions fail. Keep the market, universe, truncation settings, and read arguments the same.
 - Keep the same Python, finlab, pandas, NumPy, and PyArrow versions recorded in `manifest.json`. Archive the strategy source, parameters, fixed `end_date`, environment lockfile, and outputs separately. Only load your own trusted snapshots: input files use pickle.
 
-Save the coverage helper above and the following code in the same Python script. `run_strategy` explicitly reads and validates the two date tables, then `deadline()` and `sim()` record their additional reads. `force_download=True` synchronizes the explicit financial/date/price reads during online recording.
+Save the coverage helper above and the following code in the same Python script. This example defines a two-stock strategy (2330 and 2317), using financial inputs through 2025-Q3 for a backtest ending in 2025. `run_strategy` explicitly reads and validates the two date tables, then `deadline()` and `sim()` record their additional reads. `force_download=True` synchronizes the explicit financial/date/price reads during online recording. Full-market date tables have missing cells, including historical statements of delisted stocks; expanding the strategy's inputs can therefore fail validation. Do not skip those checks or substitute filing dates for statutory deadlines.
 
 ```python
 from pathlib import Path
@@ -84,7 +84,7 @@ from finlab.backtest import sim
 def run_strategy(force_download: bool = False):
     cash = data.get(
         "financial_statement:現金及約當現金", force_download=force_download
-    )
+    ).loc[:"2025-Q3", ["2330", "2317"]]
     date_tables = {
         key: data.get(key, force_download=force_download)
         for key in (
@@ -93,7 +93,9 @@ def run_strategy(force_download: bool = False):
         )
     }
     require_quarter_dates(cash, date_tables)
-    close = data.get("price:收盤價", force_download=force_download)
+    close = data.get("price:收盤價", force_download=force_download).loc[
+        :"2025-12-31", cash.columns
+    ]
     position = (cash.deadline() > 0) & (close > close.average(60))
     return sim(position, resample="M", end_date="2025-12-31", upload=False)
 
@@ -134,4 +136,4 @@ else:
 
 **Capture boundaries:** data read before the block, external APIs/files, and work evaluated after the block are not captured. Neither `data.versions()` queries nor arbitrary network operations are a snapshot of strategy inputs. Avoid overlapping snapshot blocks and finish all worker threads before leaving one. `upload=False` avoids backtest uploads; other code may still use network services. A snapshot preserves what was actually read, including stale or inconsistent inputs; it cannot recover an expired publication that was never saved and does not certify cross-table consistency. Run coverage validation before accepting the recording.
 
-API source: [released finlab 2.2.22](https://pypi.org/project/finlab/2.2.22/), [official upgrade guide](https://finlab.finance/docs/upgrade-guide/).
+API source: [released finlab package](https://pypi.org/project/finlab/), [official upgrade guide](https://finlab.finance/docs/upgrade-guide/).
