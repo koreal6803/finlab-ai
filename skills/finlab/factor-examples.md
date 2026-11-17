@@ -754,7 +754,7 @@ from finlab.backtest import sim
 pb = data.get("price_earning_ratio:股價淨值比")
 close = data.get("price:收盤價")
 
-buy = (1 / (pb * close) * (close > close.average(60)) * (close > 5)).is_largest(20)
+buy = (1 / (pb * close))[(close > close.average(60)) & (close > 5)].is_largest(20)
 sim(buy, resample="Q")
 ```
 
