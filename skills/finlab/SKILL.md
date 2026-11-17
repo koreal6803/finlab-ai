@@ -365,7 +365,7 @@ Short version pointers for features added in recent releases. Each reference fil
 - `data.search(market="rotc")`: scoped to the emerging-market catalog only
 
 **v2.0.1** (2026-04-26)
-- `python -m finlab cloud` *(CLI)*: deploy strategies to the `finlab-auto-update` Cloud Functions runtime with daily Asia/Taipei scheduling — `deploy`, `get`, `list`, `run`, `logs`, `schedule set/delete`, `delete`, `status`. See [trading-reference.md](trading-reference.md#cloud-strategy-deployment--python--m-finlab-cloud-v201)
+- `python -m finlab cloud` *(CLI)*: deploy strategies to the `finlab-auto-update` Cloud Functions runtime with daily, weekly, monthly, or custom cron scheduling in Asia/Taipei (frequency options since v2.2.9) — `deploy`, `get`, `list`, `run`, `logs`, `schedule set/delete`, `delete`, `status`. See [trading-reference.md](trading-reference.md#cloud-strategy-deployment--python--m-finlab-cloud-v201)
 - `sim()` peak RSS ~800 MB lower on full-market monthly strategies (was ~2.0–2.2 GiB → ~1.29 GiB); enables s-tier cloud workers that previously OOM'd
 
 **v2.0.0** (2026-04-22) — major release

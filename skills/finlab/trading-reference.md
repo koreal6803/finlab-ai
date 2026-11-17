@@ -134,7 +134,7 @@ total_position = position1 + position2
 |--------|-------------------------------|
 | Esun (玉山) | `ESUN_CONFIG_PATH`, `ESUN_MARKET_API_KEY`, `ESUN_ACCOUNT_PASSWORD`, `ESUN_CERT_PASSWORD` |
 | Sinopac (永豐) | `SHIOAJI_API_KEY`, `SHIOAJI_SECRET_KEY`, `SHIOAJI_CERT_PERSON_ID`, `SHIOAJI_CERT_PATH`, `SHIOAJI_CERT_PASSWORD` |
-| Masterlink (元富) | `MASTERLINK_NATIONAL_ID`, `MASTERLINK_ACCOUNT`, `MASTERLINK_ACCOUNT_PASS`, `MASTERLINK_CERT_PATH`, `MASTERLINK_CERT_PASS` |
+| Taishin (台新，原元富) | `TAISHIN_NATIONAL_ID`, `TAISHIN_ACCOUNT`, `TAISHIN_ACCOUNT_PASS`, `TAISHIN_CERT_PATH`, `TAISHIN_CERT_PASS` |
 | Fubon (富邦) | `FUBON_NATIONAL_ID`, `FUBON_ACCOUNT_PASS`, `FUBON_CERT_PATH` |
 
 ---
@@ -209,33 +209,41 @@ pip install shioaji
 
 ---
 
-### Masterlink (元富證券)
+### Taishin (台新證券，原元富證券)
+
+Masterlink merged into Taishin in April 2026. Use `TaishinAccount` and `TAISHIN_*` for new setups. The legacy `MasterlinkAccount` import and `MASTERLINK_*` variables still work; each `TAISHIN_*` value takes precedence over its legacy equivalent.
+
+**Install SDK before importing:**
+`taishin_sdk` is not on PyPI. Download the wheel matching your OS and CPU architecture from the [official SDK download page](https://ml-fugle-api.tssco.com.tw/FugleSDK/docs/download/download-sdk/), then install the downloaded file. The SDK officially supports Python 3.8–3.12.
+```bash
+python -m pip install /path/to/taishin_sdk-*.whl
+```
 
 **Import:**
 ```python
-from finlab.online.masterlink_account import MasterlinkAccount
+from finlab.online.taishin_account import TaishinAccount
 ```
 
 **Environment Variables:**
 ```bash
-export MASTERLINK_NATIONAL_ID='A123456789'
-export MASTERLINK_ACCOUNT='account'
-export MASTERLINK_ACCOUNT_PASS='password'
-export MASTERLINK_CERT_PATH='/path/to/cert'
-export MASTERLINK_CERT_PASS='cert_password'
+export TAISHIN_NATIONAL_ID='A123456789'
+export TAISHIN_ACCOUNT='account'
+export TAISHIN_ACCOUNT_PASS='password'
+export TAISHIN_CERT_PATH='/path/to/cert'
+export TAISHIN_CERT_PASS='cert_password'
 ```
 
 **Usage:**
 ```python
 import os
 
-os.environ['MASTERLINK_NATIONAL_ID'] = 'A123456789'
-os.environ['MASTERLINK_ACCOUNT'] = 'account'
-os.environ['MASTERLINK_ACCOUNT_PASS'] = 'password'
-os.environ['MASTERLINK_CERT_PATH'] = '/path/to/cert'
-os.environ['MASTERLINK_CERT_PASS'] = 'cert_password'
+os.environ['TAISHIN_NATIONAL_ID'] = 'A123456789'
+os.environ['TAISHIN_ACCOUNT'] = 'account'
+os.environ['TAISHIN_ACCOUNT_PASS'] = 'password'
+os.environ['TAISHIN_CERT_PATH'] = '/path/to/cert'
+os.environ['TAISHIN_CERT_PASS'] = 'cert_password'
 
-acc = MasterlinkAccount()
+acc = TaishinAccount()
 ```
 
 ---
@@ -467,8 +475,8 @@ python -m finlab cloud get    <sid>     # inspect metadata + inline source
 python -m finlab cloud list             # list deployed strategies
 python -m finlab cloud run    <sid>     # trigger one ad-hoc execution
 python -m finlab cloud logs   <sid>     # recent execution history
-python -m finlab cloud schedule set <sid> HH:MM   # e.g. schedule set my-strat 14:30
-python -m finlab cloud schedule delete <sid>
+python -m finlab cloud schedule set <sid> [HH:MM] # time optional for custom cron
+python -m finlab cloud schedule delete <sid>      # remove schedule until set again
 python -m finlab cloud delete <sid>     # remove strategy + schedule (history preserved)
 python -m finlab cloud status           # monthly budget / tier usage
 ```
@@ -494,9 +502,28 @@ python -m finlab cloud deploy my_value_strategy \
 
 **Key flags:**
 - `--code <file.py>` *or* `--zip <archive.zip> --entry-script <relpath.py>` — choose one. Zip is for multi-file strategies.
-- `--time HH:MM` — daily trigger time in Asia/Taipei. If omitted, a new SID gets no schedule (run manually with `cloud run`) and an existing SID keeps its current one (remove it with `cloud schedule delete <sid>`).
+- `--time HH:MM` — trigger time in Asia/Taipei (daily by default). Without `--time` or frequency options, a new SID gets no schedule (run manually with `cloud run`) and an existing SID keeps its current one.
+- `--frequency {daily,weekly,monthly,custom}` *(v2.2.9)* — available on both `cloud deploy` and `cloud schedule set`. Use `--time HH:MM` on deploy or positional `HH:MM` on schedule set, except for custom cron.
+- `--days-of-week 1,2,3,4,5` — required for `--frequency weekly`; 0=Sunday through 6=Saturday. Weekdays still include market holidays.
+- `--day-of-month 1-31` — required for `--frequency monthly`; months without that date are skipped.
+- `--cron "35 14 * * 1-5"` — required for `--frequency custom`; a numeric five-field cron (minute, hour, day, month, weekday) in Asia/Taipei, with no separate time required.
 - `--tier {s,m,l,xl}` — compute tier. Larger tiers cost more per run; check `cloud status` for available tiers and monthly budget.
 - `--contest` / `--no-contest` / `--contest-alias <name>` — participate in FinLab's strategy contest under an alias.
+
+### Schedule Examples
+
+```bash
+# Weekdays at 14:35 (also works with deploy --code strategy.py --time 14:35)
+python -m finlab cloud schedule set my_value_strategy 14:35 --frequency weekly --days-of-week 1,2,3,4,5
+
+# The first of each month at 14:35
+python -m finlab cloud schedule set my_value_strategy 14:35 --frequency monthly --day-of-month 1
+
+# Custom cron: weekdays at 14:35, without a separate HH:MM argument
+python -m finlab cloud schedule set my_value_strategy --frequency custom --cron "35 14 * * 1-5"
+```
+
+`cloud schedule delete <sid>` removes the schedule; it does not pause until Monday or resume automatically. Restore automatic runs with `cloud schedule set`.
 
 ### Inspect, Trigger, Monitor
 
@@ -534,8 +561,8 @@ python -m finlab cloud logs momentum_top10 --show-output
 # 3. Iterate: redeploy overwrites the existing SID's code and schedule
 python -m finlab cloud deploy momentum_top10 --code strategy.py --time 14:00 --tier m
 
-# 4. Pause for the weekend
-python -m finlab cloud schedule delete momentum_top10
+# 4. Run only on weekdays; the schedule continues automatically next Monday
+python -m finlab cloud schedule set momentum_top10 14:00 --frequency weekly --days-of-week 1,2,3,4,5
 ```
 
 ---
