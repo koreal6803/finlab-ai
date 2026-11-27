@@ -35,7 +35,7 @@ Then ask your AI: "Backtest a Taiwan stock strategy that buys the strongest mont
 
 ### What it does on your machine
 
-The skill is documentation: it has no hooks and no bundled programs. It tells your AI tool to install the `finlab` Python package with [uv](https://docs.astral.sh/uv/), sign in with `python -m finlab login`, which opens your browser, and download market data from FinLab. Strategy code runs on your machine, and nothing is uploaded unless you ask for it. It also documents broker order APIs, and tells your AI to show you a preview and wait for your confirmation before placing any real order.
+The skill is documentation: it has no hooks and no bundled programs. It tells your AI tool to install the `finlab` Python package with [uv](https://docs.astral.sh/uv/), sign in with `python -m finlab login`, which opens your browser, and download market data from FinLab. Strategy code runs on your machine, and nothing is uploaded unless you ask for it.
 
 ## MCP Server
 
@@ -60,7 +60,7 @@ Tools: `list_strategies`, `get_strategy` (with Python code), `get_stock_evidence
 ## Learn more
 
 - [Quant trading guide (量化交易)](https://finlab.finance/tools/quant-trading): what quantitative trading is, a Taiwan-stock strategy backtester, and a platform comparison.
-- [Program trading guide (程式交易)](https://finlab.finance/tools/program-trading): how program trading works, three backtest-verified Taiwan-stock strategies, and an auto-trading walkthrough.
+- [Program trading guide (程式交易)](https://finlab.finance/tools/program-trading): how program trading works and three backtest-verified Taiwan-stock strategies.
 - [Stock selection guide (股票選股)](https://finlab.finance/tools/stock-selection): factor-based stock picking with real backtests, from single factors to multi-factor composites.
 - [Strategy research blog](https://finlab.finance/blog): backtest-verified Taiwan-stock strategy reports (CAGR, Sharpe, max drawdown).
 - Website: [finlab.finance](https://finlab.finance)
