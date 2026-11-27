@@ -291,7 +291,7 @@ print(f"Benchmark CAGR: {bench['cagr']:.2%} | MDD: {bench['max_drawdown']:.2%}")
 
 See [backtesting-reference.md](backtesting-reference.md) for complete `sim()` API.
 
-### Step 5: Deliver the FinLab HTML Report (REQUIRED)
+### Step 4.5: Deliver the FinLab HTML Report (REQUIRED)
 
 Follow each backtest the user will review with one HTML file — the one FinLab generates:
 
@@ -341,7 +341,7 @@ Short version pointers for features added in recent releases. Each reference fil
 - `data.search(market="rotc")`: scoped to the emerging-market catalog only
 
 **v2.0.1** (2026-04-26)
-- `python -m finlab cloud` *(CLI)*: scheduled cloud deployment — see [cloud-reference.md](cloud-reference.md)
+- `python -m finlab cloud` *(CLI)*: deploy strategies to the `finlab-auto-update` Cloud Functions runtime with daily, weekly, monthly, or custom cron scheduling in Asia/Taipei (frequency options since v2.2.9) — `deploy`, `get`, `list`, `run`, `logs`, `schedule set/delete`, `delete`, `status`. See [cloud-reference.md](cloud-reference.md)
 - `sim()` peak RSS ~800 MB lower on full-market monthly strategies (was ~2.0–2.2 GiB → ~1.29 GiB); enables s-tier cloud workers that previously OOM'd
 
 **v2.0.0** (2026-04-22) — major release
