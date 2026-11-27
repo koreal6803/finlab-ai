@@ -1,6 +1,6 @@
 # Cloud Strategy Deployment Reference — `python -m finlab cloud` *(v2.0.1)*
 
-For users who want a strategy to run automatically on a schedule (Asia/Taipei time, daily by default, market holidays not skipped) without managing their own server, FinLab ships a CLI that deploys the strategy to the `finlab-auto-update` Cloud Functions runtime. It runs the strategy on that schedule; it does not place orders.
+Deploys a strategy to FinLab's `finlab-auto-update` Cloud Functions runtime and runs it on a schedule, with no server of your own. Schedules use Asia/Taipei time and do not skip market holidays. It does not place orders.
 
 ## Command Map
 
@@ -16,7 +16,7 @@ python -m finlab cloud delete <sid>     # remove strategy + schedule (history pr
 python -m finlab cloud status           # monthly budget / tier usage
 ```
 
-`<sid>` is your strategy identifier: up to 64 letters, numbers, `.`, `_`, or `-`, starting with a letter or number. Keep it stable — it is the Firestore document id.
+`<sid>` is your strategy identifier: up to 64 letters, numbers, `.`, `_`, or `-`, starting with a letter or number. Reuse the same SID to update a deployment: redeploying replaces its code.
 
 ## Deploy
 
@@ -37,12 +37,12 @@ python -m finlab cloud deploy my_value_strategy \
 
 **Key flags:**
 - `--code <file.py>` *or* `--zip <archive.zip> --entry-script <relpath.py>` — choose one. Zip is for multi-file strategies.
-- `--time HH:MM` — trigger time in Asia/Taipei (daily by default). Without `--time` or frequency options, a new SID gets no schedule (run manually with `cloud run`) and an existing SID keeps its current one.
-- `--frequency {daily,weekly,monthly,custom}` *(v2.2.9)* — available on both `cloud deploy` and `cloud schedule set`. Use `--time HH:MM` on deploy or positional `HH:MM` on schedule set, except for custom cron.
-- `--days-of-week 1,2,3,4,5` — required for `--frequency weekly`; 0=Sunday through 6=Saturday. Weekdays still include market holidays.
+- `--time HH:MM` — trigger time, daily unless `--frequency` says otherwise; pick a time after the strategy's data is final ([SKILL.md](SKILL.md#when-todays-taiwan-data-is-final)). Without `--time` or frequency options, a new SID gets no schedule (run manually with `cloud run`) and an existing SID keeps its current one.
+- `--frequency {daily,weekly,monthly,custom}` *(v2.2.9)* — available on both `cloud deploy` and `cloud schedule set`. Use `--time HH:MM` on deploy or positional `HH:MM` on schedule set.
+- `--days-of-week 1,2,3,4,5` — required for `--frequency weekly`; 0=Sunday through 6=Saturday.
 - `--day-of-month 1-31` — required for `--frequency monthly`; months without that date are skipped.
-- `--cron "35 14 * * 1-5"` — required for `--frequency custom`; a numeric five-field cron (minute, hour, day, month, weekday) in Asia/Taipei, with no separate time required.
-- `--tier {s,m,l,xl}` — compute tier. Larger tiers cost more per run; check `cloud status` for available tiers and monthly budget.
+- `--cron "35 14 * * 1-5"` — required for `--frequency custom`; a numeric five-field cron (minute, hour, day, month, weekday); no separate time needed.
+- `--tier {s,m,l,xl}` — compute tier; larger tiers cost more per run.
 - `--contest` / `--no-contest` / `--contest-alias <name>` — participate in FinLab's strategy contest under an alias.
 
 ## Schedule Examples
@@ -54,11 +54,9 @@ python -m finlab cloud schedule set my_value_strategy 14:35 --frequency weekly -
 # The first of each month at 14:35
 python -m finlab cloud schedule set my_value_strategy 14:35 --frequency monthly --day-of-month 1
 
-# Custom cron: weekdays at 14:35, without a separate HH:MM argument
+# Custom cron: weekdays at 14:35
 python -m finlab cloud schedule set my_value_strategy --frequency custom --cron "35 14 * * 1-5"
 ```
-
-`cloud schedule delete <sid>` removes the schedule; it does not pause until Monday or resume automatically. Restore automatic runs with `cloud schedule set`.
 
 ## Inspect, Trigger, Monitor
 
@@ -84,25 +82,8 @@ python -m finlab cloud status --month 2026-04
 
 Returns monthly budget, used quota, remaining quota, available tiers, and execution counts (success / error / timeout). Check this before deploying a high-tier strategy; you cannot exceed the monthly budget.
 
-## Typical Flow
-
-```bash
-# 1. Local development — finalize strategy in strategy.py and verify with sim()
-python -m finlab cloud deploy momentum_top10 --code strategy.py --time 13:35 --tier s
-
-# 2. Confirm it ran today
-python -m finlab cloud logs momentum_top10 --show-output
-
-# 3. Iterate: redeploy overwrites the existing SID's code and schedule
-python -m finlab cloud deploy momentum_top10 --code strategy.py --time 14:00 --tier m
-
-# 4. Run only on weekdays; the schedule continues automatically next Monday
-python -m finlab cloud schedule set momentum_top10 14:00 --frequency weekly --days-of-week 1,2,3,4,5
-```
-
 ---
 
 ## Related References
 
-- [backtesting-reference.md](backtesting-reference.md): Backtest configuration and report generation
-- [best-practices.md](best-practices.md): Coding patterns and anti-patterns
+- [backtesting-reference.md](backtesting-reference.md#upload): cloud runs upload the `sim()` report automatically (`FINLAB_FORCED_STRATEGY_NAME`)

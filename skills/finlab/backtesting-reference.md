@@ -248,7 +248,7 @@ report.to_html(path: str, title: str | None = None) -> None
 - full metric panel (CAGR, Sharpe, Sortino, Calmar, MDD, win rate, MAE/MFE, beta/alpha, capacity)
 - trade-by-trade table of the most recent 500 trades — entry/exit dates, prices, position size, return, holding days
 
-**When to use:** after any `sim()` call the user will review (batch-run exception: see SKILL.md Step 4.5). It is the file the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
+**When to use:** after any `sim()` call the user will review (batch-run exception: see SKILL.md Step 5). It is the file the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
 
 ```python
 report = sim(position, resample="M", upload=False)

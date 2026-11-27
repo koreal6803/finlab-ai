@@ -60,7 +60,7 @@ Tools: `list_strategies`, `get_strategy` (with Python code), `get_stock_evidence
 ## Learn more
 
 - [Quant trading guide (量化交易)](https://finlab.finance/tools/quant-trading): what quantitative trading is, a Taiwan-stock strategy backtester, and a platform comparison.
-- [Program trading guide (程式交易)](https://finlab.finance/tools/program-trading): how program trading works, three backtest-verified Taiwan-stock strategies, and an auto-trading walkthrough.
+- [Program trading guide (程式交易)](https://finlab.finance/tools/program-trading): how program trading works and three backtest-verified Taiwan-stock strategies.
 - [Stock selection guide (股票選股)](https://finlab.finance/tools/stock-selection): factor-based stock picking with real backtests, from single factors to multi-factor composites.
 - [Strategy research blog](https://finlab.finance/blog): backtest-verified Taiwan-stock strategy reports (CAGR, Sharpe, max drawdown).
 - Website: [finlab.finance](https://finlab.finance)
