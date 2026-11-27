@@ -18,7 +18,7 @@ finlab-plugin/skills/finlab/
 ├── SKILL.md                    # Main entry point - overview, quick start, core workflow
 ├── dataframe-reference.md      # FinLabDataFrame methods (is_largest, sustain, hold_until)
 ├── backtesting-reference.md    # sim() API, Report class, metrics extraction
-├── trading-reference.md        # OrderExecutor, Position, broker account setup
+├── cloud-reference.md          # python -m finlab cloud: scheduled cloud deployment
 ├── factor-examples.md          # 60+ complete strategy examples (TW + short US syntax section)
 ├── factor-analysis-reference.md # IC, Shapley values, calc_metric, calc_centrality
 ├── best-practices.md           # Patterns, anti-patterns, error handling
@@ -147,11 +147,6 @@ When reviewing any skill file, verify:
 - Full `sim()` signature with all parameters
 - `Report` class methods documented separately
 - Key mappings table: `metrics.X()` vs `get_stats()['Y']`
-
-### trading-reference.md
-- Environment variable tables per broker
-- Exact import paths
-- Order execution workflow steps
 
 ### factor-examples.md
 - Each example: title, brief description, complete code

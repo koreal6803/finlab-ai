@@ -479,9 +479,7 @@ from finlab.exceptions import (
     FinlabError,      # root — catch-all for finlab-specific errors
     DataError,        # data fetch / parsing / schema
     BacktestError,    # defined but not raised
-    BrokerError,      # broker account / order submission
     AuthError,        # login / token refresh
-    PortfolioError,   # PortfolioSyncManager sync failures
     ConfigError,      # invalid configuration
 )
 
